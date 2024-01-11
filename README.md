@@ -20,9 +20,8 @@
 
 # To do:
 
-
-- Add polybar with (music, and others keyelements)
+- shutdown options
+- Add polybar with (music, and others )
 - Configure nvim
-- Uniform theme : Catppuccin or rosepine
-- tmux ?
+- Uniform theme : rosepine
 
