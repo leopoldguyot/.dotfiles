@@ -201,8 +201,10 @@ bindsym $mod+r mode "resize"
 #}
 
 # Wallpapers :
-
-exec_always feh --bg-fill ~/Pictures/wallpapers/monamona.jpg
+ 
+exec_always nitrogen --restore
+ 
+#exec_always feh --bg-fill ~/Pictures/wallpapers/waifus2022.jpg
 
 # Media player controls 
 bindsym XF86AudioPlay exec playerctl play-pause
