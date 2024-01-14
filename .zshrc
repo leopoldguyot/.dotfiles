@@ -8,6 +8,31 @@ fi
 # Personal scripts:
 export PATH=/home/leopoldguyot/.local/bin/scripts:$PATH
 
+# Aliases:
+
+alias vi='nvim'
+alias svi='sudo nvim'
+alias ls='ls --color=auto'
+alias ll='ls -la'
+alias cd..='cd ..'
+alias ..='cd ..'
+alias mv='mv -i'
+alias cp='cp -i'
+alias ln='ln -i'
+alias reboot='sudo /sbin/reboot'
+alias poweroff='sudo /sbin/poweroff'
+alias halt='sudo /sbin/halt'
+alias shutdown='sudo /sbin/shutdown'
+alias gits='git status'
+alias gitall='git add .'
+alias gitc='git commit'
+
+# alias fedora:
+alias install='sudo dnf install'
+alias update='sudo dnf update'
+alias search='sudo dnf search'
+
+
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
 HISTSIZE=1000
