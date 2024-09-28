@@ -6,7 +6,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Personal scripts:
-export PATH=/home/leopoldguyot/.local/bin/scripts:$PATH
+export PATH=/home/lguyot/.local/bin/scripts:$PATH
 
 # Aliases:
 
@@ -41,7 +41,7 @@ setopt autocd beep extendedglob nomatch notify
 bindkey -v
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
-zstyle :compinstall filename '/home/leopoldguyot/.zshrc'
+zstyle :compinstall filename '/home/lguyot/.zshrc'
 
 autoload -Uz compinit
 compinit
@@ -59,3 +59,20 @@ source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 
 source ~/powerlevel10k/powerlevel10k.zsh-theme
+fpath+=${ZDOTDIR:-~}/.zsh_functions
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/usr/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/usr/etc/profile.d/conda.sh" ]; then
+        . "/usr/etc/profile.d/conda.sh"
+    else
+        export PATH="/usr/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+

@@ -4,19 +4,21 @@ import = [
     #"~/.config/alacritty/catppuccin-macchiato.toml"
     # "~/.config/alacritty/catppuccin-frappe.toml"
     # "~/.config/alacritty/catppuccin-latte.toml"
-    "~/.config/alacritty/rose-pine.toml"
+    #"~/.config/alacritty/rose-pine.toml"
     #"~/.config/alacritty/rose-pine-moon.toml"
 ]
 [window]
 dynamic_title = true
-opacity = 0.95
 
 [env]
 TERM = "xterm-256color"
 
 [font]
 
-normal = { family = "JetBrainsMono Nerd Font", style = "<string>" }
+#normal = { family = "Ubuntu", style = "Regular" }
 
-size = 11.25
+size = 11
+
+[font.normal]
+family = "Ubuntu Nerd Font"
 
