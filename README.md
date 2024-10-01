@@ -1,27 +1,28 @@
-# To install:
+# To install on fresh os:
 
-- File manager
-- i3
-- i3-gaps
-- polybar
-- nvim
-- alacritty
+- stow
+- [neovim](https://github.com/neovim/neovim)
+- tmux
+- zsh
+- ["Oh My ZSH!"](https://ohmyz.sh/)
+    - Theme: agnoster
+    - git
+    - command-not-found
+    - sudo
+- [zsh autocompletion](https://github.com/zsh-users/zsh-autosuggestions)
+- fzf
+- [alacritty](https://github.com/alacritty/alacritty)
 - [TPM](https://github.com/tmux-plugins/tpm)
-# Catppuccin:
+- [radian](https://github.com/randy3k/radian)
+- [optional] File manager (thunar)
+- [optional] emacs
 
-- [RStudio](https://github.com/catppuccin/rstudio)
-- [VScode](https://github.com/catppuccin/visual-studio)
-- [Tmux](https://github.com/catppuccin/tmux)
-- [alacritty](https://github.com/catppuccin/alacritty)
-- [i3/sway](https://github.com/catppuccin/i3)
-- [Polybar](https://github.com/catppuccin/polybar)
-- [Rofi](https://github.com/catppuccin/rofi)
-- [Darkreader](https://github.com/catppuccin/dark-reader)
 
-# To do:
+# To do on fresh install:
 
-- shutdown options
-- Add polybar with (music, and others )
-- Configure nvim
-- Uniform theme : rosepine
+# Fonts:
 
+run 
+```bash
+curl -OL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraMono.tar.xz
+```
