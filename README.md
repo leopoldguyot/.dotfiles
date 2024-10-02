@@ -1,5 +1,6 @@
 # To install on fresh os:
 
+- git
 - stow
 - [neovim](https://github.com/neovim/neovim)
 - tmux
@@ -16,13 +17,21 @@
 - [radian](https://github.com/randy3k/radian)
 - [optional] File manager (thunar)
 - [optional] emacs
-
+- [optional(ubuntu)] nala
 
 # To do on fresh install:
 
+- Go to .dotfiles and run .local/bin/scripts/sync-dotfiles (ensure that no single file present in the dotfile is present in home)
+
+-zsh will be preconfigured on the installation of oh my zsh
+## configuration of "oh my zsh"
+
+
+
+
 # Fonts:
 
-run 
+run in home/.fonts/ 
 ```bash
 curl -OL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraMono.tar.xz
-```
+```code
