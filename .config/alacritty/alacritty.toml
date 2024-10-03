@@ -1,24 +1,26 @@
-import = [
-    # uncomment the flavour you want below:
-    #"~/.config/alacritty/catppuccin-mocha.toml"
-    #"~/.config/alacritty/catppuccin-macchiato.toml"
-    # "~/.config/alacritty/catppuccin-frappe.toml"
-    # "~/.config/alacritty/catppuccin-latte.toml"
-    #"~/.config/alacritty/rose-pine.toml"
-    #"~/.config/alacritty/rose-pine-moon.toml"
-]
 [window]
 dynamic_title = true
+opacity = 0.85
+decorations = "None"
 
 [env]
 TERM = "xterm-256color"
 
 [font]
+size = 11.5
 
-#normal = { family = "Ubuntu", style = "Regular" }
+[font.bold]
+family = "FiraMono Nerd Font Mono"
+style = "Bold"
 
-size = 11
+[font.bold_italic]
+family = "FiraMono Nerd Font Mono"
+style = "Bold Italic"
+
+[font.italic]
+family = "FiraMono Nerd Font Monoe"
+style = "Italic"
 
 [font.normal]
-family = "Ubuntu Nerd Font"
-
+family = "FiraMono Nerd Font Mono"
+style = "Regular"

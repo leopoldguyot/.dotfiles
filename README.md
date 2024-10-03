@@ -24,11 +24,18 @@
 - Go to .dotfiles and run .local/bin/scripts/sync-dotfiles (ensure that no single file present in the dotfile is present in home)
 
 -zsh will be preconfigured on the installation of oh my zsh
+
+- Nothing to do for nvim (just check error message and install needed composants
 ## configuration of "oh my zsh"
 
+Nothing to do but be aware that zsh autocompletion should be install after omz
 
+PS: maybe omz will overide the .zshrc just replace it with existing zshrc file.
 
-
+=> run
+```bash
+chsh -s $(which zsh)
+```
 # Fonts:
 
 run in home/.fonts/ 
