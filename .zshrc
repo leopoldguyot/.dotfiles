@@ -114,3 +114,5 @@ else
 fi
 unset __mamba_setup
 # <<< mamba initialize <<<
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

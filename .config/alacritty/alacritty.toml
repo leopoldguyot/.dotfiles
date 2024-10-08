@@ -1,6 +1,6 @@
 [window]
 dynamic_title = true
-opacity = 0.85
+opacity = 0.9
 decorations = "None"
 
 [env]
@@ -18,7 +18,7 @@ family = "FiraMono Nerd Font Mono"
 style = "Bold Italic"
 
 [font.italic]
-family = "FiraMono Nerd Font Monoe"
+family = "FiraMono Nerd Font Mono"
 style = "Italic"
 
 [font.normal]
