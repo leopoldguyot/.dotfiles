@@ -1,4 +1,13 @@
 # tmux
+How to have one window on a separate screen ?
+
+If -t is given, the new session is grouped with target-session.  This means they share the same set
+of windows - all windows from target-session are linked to the new session and any subsequent new
+windows or windows being closed are applied to both sessions.  The current and previous window and
+any session options remain independent and either session may be killed without affecting the
+other.  Giving -n or shell-command are invalid if -t is used.
+
+=> Create a script to launch a session that will have the target specified by a fzf trough the current sessions
 
 - `list-keys` show bindings
 - `<leader> + :` command mode
@@ -54,15 +63,65 @@ Possibility to move the windows
 
 # neovim
 
-To quit Neovim, use :q or <leader> + q .
+- `:q` or  `<leader> + q` quit neovim
 
-Use :w or <leader> + w to save changes made to the file.
+- `:w` or `<leader> + w` save changes made to the file.
 
-To discard changes, use :q! (It forcefully quit without saving).
+- `:q!` forcefully quit without saving
 
-To save and quit, use :wq.
+- `:wq` write and quit
 
-?close little buffer (for instance for definition)
+- :w filename     Save file under new filename
+
+- `:<tab> `         Show commands
+
+- i               Switch to INSERT mode
+- R               Switch to REPLACE mode to overwrite text
+- v               Switch to VISUAL mode
+- V               Switch to VISUAL LINE mode
+- <ctrl>v         Switch to VISUAL BLOCK mode
+- o               Insert a new line below the current line and go to INSERT mode
+- O               Insert a new line above the current line and go to INSERT mode
+- x               Delete character under the cursor
+- X               Delete character left of the cursor
+- dd              Delete current line
+- dw              Delete current word
+- D               Delete to the end of the line
+- <esc>           Leave current mode
+- /               Search for text
+- $               Go to the end of the line
+- gcc             Comment out a line
+- <ctrl>r         Redo last change
+- <ctrl>g         Show file info
+
+- /               Search forward
+- ?               Search backward
+- n               Repeat last search
+- s{char}{char}   Sneak search forward
+- s<enter>        Repeat last sneak search
+- f{char}         Jump to the next {char} right
+- fffff           Jump to next found
+?close little buffer (for instance for definition) => :q
+
+0               To first character in the line
+$               To end of line
+G               To end of file
+gg              To start of file
+w               Word forward
+b               Word backwards
+)               Sentence forward
+(               Sentence backwards
+}               Paragraph forward
+{               Paragraph backwards
+
+:sf filename            Open file in new window
+:sf <tab>               Search file 
+
+
+## Copy/paste
+
+- For wayland install wl-clipboard and use export `NVIM_WAYLAND_CLIPBOARD_PROVIDER="wl-clipboard"`
+- You can communicate with the wl-clipboard with `"+` and y or p
 
 ## lsp
 
@@ -95,4 +154,4 @@ We have the plugins folder that contain individual file for each plugin. These f
 - mason-lsp-config: link the installed lsp from Mason with lsp-config (ensure_installed is the list of lsp that will be installed without the need to go in the Mason UI)
 - lsp-config: manage the comunication between lsp and neovim. Each installed lsp need to be setup in the configuration of lsp-config
 - none-ls: null-ls clone, manage linters and formatters.
-    - There are builtin tools: proselint, spell, actionlint, checkmake, clazy, cmake_lint, format_r, styler
+    - There are builtin tools: proselint, spell, actionlint, checkmake, clazy, cmake_lint, format_r, styler (note that a formater is already present in the base lsp)

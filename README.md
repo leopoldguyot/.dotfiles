@@ -13,7 +13,7 @@
 - [zsh autocompletion](https://github.com/zsh-users/zsh-autosuggestions)
 - fzf
 - [alacritty](https://github.com/alacritty/alacritty)
-- [TPM](https://github.com/tmux-plugins/tpm)
+- [TPM](https://github.com/tmux-plugins/tpm) (in ~/.config/tmux/tpm)
 - [radian](https://github.com/randy3k/radian)
 - [optional] File manager (thunar)
 - [optional] emacs
