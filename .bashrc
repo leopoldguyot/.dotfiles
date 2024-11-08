@@ -24,6 +24,34 @@ if [ -d ~/.bashrc.d ]; then
 fi
 
 unset rc
+
+alias vi='nvim'
+alias svi='sudo nvim'
+alias ls='ls --color=auto'
+alias ll='ls -la'
+alias cd..='cd ..'
+alias ..='cd ..'
+alias mv='mv -i'
+alias cp='cp -i'
+alias ln='ln -i'
+alias reboot='sudo /sbin/reboot'
+alias poweroff='sudo /sbin/poweroff'
+alias halt='sudo /sbin/halt'
+alias shutdown='sudo /sbin/shutdown'
+alias gits='git status'
+alias gitall='git add .'
+alias gitc='git commit'
+
+# alias fedora:
+#alias install='sudo dnf install'
+#alias update='sudo dnf update'
+#alias search='sudo dnf search'
+
+# alias ubuntu:
+alias install='sudo nala install'
+alias update='sudo nala update'
+alias search='sudo nala search'
+
 . "$HOME/.cargo/env"
 
 # >>> conda initialize >>>

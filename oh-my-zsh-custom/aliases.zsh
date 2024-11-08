@@ -1,4 +1,3 @@
-
 alias vi='nvim'
 alias svi='sudo nvim'
 alias ls='ls --color=auto'
