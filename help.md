@@ -155,3 +155,10 @@ We have the plugins folder that contain individual file for each plugin. These f
 - lsp-config: manage the comunication between lsp and neovim. Each installed lsp need to be setup in the configuration of lsp-config
 - none-ls: null-ls clone, manage linters and formatters.
     - There are builtin tools: proselint, spell, actionlint, checkmake, clazy, cmake_lint, format_r, styler (note that a formater is already present in the base lsp)
+
+
+## Todo:
+
+- hidden files in oil
+- hidden files in telescope
+
