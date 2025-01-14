@@ -5,7 +5,7 @@ vim.cmd("set shiftwidth=4")
 vim.opt.smartindent = true
 
 vim.g.mapleader = " "
-vim.keymap.set("n", "<leader>pv", vim.cmd.Oil, {desc = "Oil"})
+vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
 vim.wo.relativenumber = true
 vim.opt.nu = true
