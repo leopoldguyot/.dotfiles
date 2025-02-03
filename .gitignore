@@ -1,3 +1,5 @@
 /oh-my-zsh-custom/plugins/*
 /.config/tmux/plugins/*
 /.config/nvim/lazy-lock.json
+/.config/emacs/eln-cache/
+/.config/emacs/elpa/
