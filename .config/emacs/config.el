@@ -92,6 +92,19 @@
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
 
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown")
+  :bind (:map markdown-mode-map
+         ("C-c C-e" . markdown-do)))
+
+(use-package poly-R
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist
+             '("\\.[rR]md\\'" . poly-gfm+r-mode)))
+
 (use-package evil
   :init
   (setq evil-want-integration t)

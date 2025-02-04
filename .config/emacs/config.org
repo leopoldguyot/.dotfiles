@@ -124,6 +124,26 @@
   ([remap describe-key] . helpful-key))
 #+END_SRC
 
+** Markdown-mode
+#+BEGIN_SRC emacs-lisp
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown")
+  :bind (:map markdown-mode-map
+         ("C-c C-e" . markdown-do)))
+
+#+END_SRC
+** Polymode
+#+BEGIN_SRC emacs-lisp
+(use-package poly-R
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist
+             '("\\.[rR]md\\'" . poly-gfm+r-mode)))
+
+
+#+END_SRC
 * Evil
 
 #+BEGIN_SRC emacs-lisp
