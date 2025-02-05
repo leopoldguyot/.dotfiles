@@ -1,3 +1,16 @@
+(require 'package)
+
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
+
+(package-initialize)
+(unless package-archive-contents
+ (package-refresh-contents))
+
+(require 'use-package)
+(setq use-package-always-ensure t)
+
 (setq inhibit-startup-message t)
   (scroll-bar-mode -1)        ; Disable visible scrollbar
   (tool-bar-mode -1)          ; Disable the toolbar
@@ -32,19 +45,6 @@
     "tt" '(counsel-load-theme :which-key "choose theme")
     "e" '(run-ess-r :which-key "start R with ESS")))
 
-(require 'package)
-
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
-
-(package-initialize)
-(unless package-archive-contents
- (package-refresh-contents))
-
-(require 'use-package)
-(setq use-package-always-ensure t)
-
 (use-package ivy
   :diminish
   :bind (:map ivy-minibuffer-map
@@ -78,7 +78,7 @@
   :diminish which-key-mode
   :config
   (which-key-mode)
-  (setq which-key-idle-delay 0.5))
+  (setq which-key-idle-delay 0.3))
 
 (use-package helpful
   :commands (helpful-callable helpful-variable helpful-command helpful-key)
@@ -105,6 +105,7 @@
              '("\\.[rR]md\\'" . poly-gfm+r-mode)))
 
 (use-package lsp-mode
+  :after which-key
   :commands (lsp lsp-deferred)
   :hook (lsp-mode . efs/lsp-mode-setup)
   :init
@@ -193,7 +194,8 @@
             ("s g" . counsel-projectile-grep))) ;; Ensure ripgrep is correctly bound
 
 (use-package doom-themes
-  :init (load-theme 'doom-dark+ t))
+  :ensure t
+  :config (load-theme 'doom-dark+ t))
 
 (use-package all-the-icons)
 
