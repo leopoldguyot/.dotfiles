@@ -59,11 +59,10 @@
   (ivy-mode 1))
 
 
-  
-(use-package ivy-rich
-  :after ivy)
-(require 'ivy-rich)
-(ivy-rich-mode 1)
+ (use-package ivy-rich
+  :after ivy
+  :config
+  (ivy-rich-mode 1))
 
 (use-package counsel
   :bind(("M-x" . counsel-M-x)
@@ -105,6 +104,22 @@
   (add-to-list 'auto-mode-alist
              '("\\.[rR]md\\'" . poly-gfm+r-mode)))
 
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook (lsp-mode . efs/lsp-mode-setup)
+  :init
+  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+  :config
+  (lsp-enable-which-key-integration t))
+  
+  (use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom
+  (lsp-ui-doc-position 'bottom))
+(use-package lsp-treemacs
+  :after lsp)
+(use-package lsp-ivy)
+
 (use-package evil
   :init
   (setq evil-want-integration t)
@@ -129,34 +144,53 @@
   (evil-collection-init))
 
 (use-package company
+  :after lsp-mode
   :hook ((prog-mode . company-mode)
-         (emacs-lisp-mode . company-mode) ;; Fixed hook
-         (ess-mode . company-mode)
-         (inferior-ess-mode . company-mode))
+         (lsp-mode . company-mode)
+         (emacs-lisp-mode . company-mode)) ;; Fixed hook
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0) ;; Immediate completion popup
-  :bind (:map company-active-map
+  :bind ((:map company-active-map
          ("<tab>" . company-complete-selection)
          ("<return>" . nil)
          ("ESC" . company-abort))
+        (:map lsp-mode-map
+         ("<tab>" . company-indent-or-complete-common))))
    ;; could use company-complete-selection
-   :config
-    ;; Ensure Enter does NOT select completion
-    (define-key company-active-map (kbd "RET") nil)
-    (define-key company-active-map (kbd "<return>") nil))
+
+
+(use-package company-box
+  :hook (company-mode . company-box-mode))
 
 (use-package ess
-    :ensure t
-    :hook ((ess-r-mode . company-mode)
-	 (inferior-ess-r-mode . company-mode))
-    :bind*(
-	  ("C-<return>" . 'ess-eval-region-or-line-and-step)
-	  ("M--" . 'ess-insert-assign)
-	  )
-    )
+  :ensure t
+  :bind*(
+	("C-<return>" . 'ess-eval-region-or-line-and-step)
+	("M--" . 'ess-insert-assign)
+	)
+  )
 
-(setq ess-use-company t)
+(use-package projectile
+    :diminish projectile-mode
+    :config (projectile-mode)
+    :custom ((projectile-completion-system 'ivy))
+    :bind-keymap
+    ("C-c p" . projectile-command-map)
+    :init
+    ;; NOTE: Set this to the folder where you keep your Git repos!
+    (when (file-directory-p "~/Documents/GitHub")
+      (setq projectile-project-search-path '("~/Documents/GitHub")))
+    (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+:after projectile
+:config
+(counsel-projectile-mode 1)
+:bind (:map projectile-command-map
+            ("p" . projectile-switch-project) ;; Use vanilla projectile
+            ("P" . counsel-projectile-switch-project) ;; Alternative key for counsel version
+            ("s g" . counsel-projectile-grep))) ;; Ensure ripgrep is correctly bound
 
 (use-package doom-themes
   :init (load-theme 'doom-dark+ t))
