@@ -26,7 +26,7 @@
                 treemacs-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
-  (menu-bar-mode 1)            ; Disable the menu bar
+  (menu-bar-mode -1)            ; Disable the menu bar
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
