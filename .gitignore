@@ -1,5 +1,23 @@
-/oh-my-zsh-custom/plugins/*
-/.config/tmux/plugins/*
+# Linux
+*~
+
+# Vim/Neovim
+*.swp
+*.swo
+*.swn
+*.un~
+*.bak
+*.tmp
+Session.vim
+*.backup
 /.config/nvim/lazy-lock.json
+
+# zsh
+/oh-my-zsh-custom/plugins/*
+
+# tmux
+/.config/tmux/plugins/*
+
+# emacs
 /.config/emacs/eln-cache/
 /.config/emacs/elpa/

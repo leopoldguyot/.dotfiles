@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ======================
+# CONFIG
+# ======================
+DOTFILES_DIR="$HOME/.dotfiles"
+ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+FONT_DIR="$HOME/.fonts"
+TMUX_TPM_DIR="$HOME/.config/tmux/tpm"
+GH_SRC_DIR="$HOME/.local/src"
+LOCAL_BIN="$HOME/.local/bin"
+CONFIG_FILE="$HOME/.config/source-tools.conf"
+I3_PACKAGES="i3 i3status i3lock dmenu xbacklight feh thunar"
+SWAY_PACKAGES="sway swaybg swayidle waybar wl-clipboard grim slurp mako thunar"
+
+mkdir -p "$GH_SRC_DIR" "$LOCAL_BIN"
+
+# ======================
+# DETECT PACKAGE MANAGER
+# ======================
+if command -v apt &>/dev/null; then
+    PKG_MANAGER="apt"
+    UPDATE_CMD="sudo apt update"
+    INSTALL_CMD="sudo apt install -y"
+elif command -v dnf &>/dev/null; then
+    PKG_MANAGER="dnf"
+    UPDATE_CMD="sudo dnf check-update || true"
+    INSTALL_CMD="sudo dnf install -y"
+elif command -v pacman &>/dev/null; then
+    PKG_MANAGER="pacman"
+    UPDATE_CMD="sudo pacman -Sy"
+    INSTALL_CMD="sudo pacman -S --noconfirm"
+else
+    echo "Unsupported package manager. Install manually."
+    exit 1
+fi
+
+# ======================
+# UPDATE SYSTEM
+# ======================
+echo "Updating system..."
+$UPDATE_CMD
+
+# ======================
+# INSTALL BASE PACKAGES
+# ======================
+echo "Installing base packages..."
+$INSTALL_CMD git stow tmux zsh fzf curl wget build-essential ninja-build gettext cmake unzip pkg-config libtool libtool-bin autoconf automake g++ cargo python3-pip fontconfig python3-pip
+if [ "$PKG_MANAGER" = "apt" ]; then
+    $INSTALL_CMD nala
+fi
+
+# ======================
+# INSTALL WM PACKAGES
+# ======================
+
+echo
+echo "Optional window manager installation"
+echo "1) i3 (X11)"
+echo "2) Sway (Wayland)"
+echo "3) None"
+read -rp "Choose an option [1/2/3]: " wm_choice
+
+case "$wm_choice" in
+    1)
+        echo "Installing i3 packages..."
+        $INSTALL_CMD $I3_PACKAGES
+        ;;
+    2)
+        echo "Installing Sway packages..."
+        $INSTALL_CMD $SWAY_PACKAGES
+        ;;
+    3)
+        echo "Skipping extra window manager packages."
+        ;;
+    *)
+        echo "Invalid choice, skipping extra packages."
+        ;;
+esac
+echo
+
+# ======================
+# Install OH MY ZSH
+# ======================
+
+echo "Installing oh-my-zsh"
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c \
+        "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
+# ======================
+# ZSH PLUGINS
+# ======================
+mkdir -p "$ZSH_CUSTOM/plugins"
+for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
+    if [ ! -d "$ZSH_CUSTOM/plugins/$plugin" ]; then
+        git clone https://github.com/zsh-users/$plugin.git "$ZSH_CUSTOM/plugins/$plugin"
+    fi
+done
+
+# ======================
+# TMUX TPM
+# ======================
+if [ ! -d "$TMUX_TPM_DIR" ]; then
+    git clone https://github.com/tmux-plugins/tpm "$TMUX_TPM_DIR"
+fi
+
+# ======================
+# RADIAN
+# ======================
+if ! command -v radian &>/dev/null; then
+    pip3 install --user radian || echo "Python not found, skipping radian."
+fi
+
+# ======================
+# DOTFILES
+# ======================
+bash "$DOTFILES_DIR/.local/bin/scripts/sync-dotfiles"
+
+# ======================
+# DEFAULT SHELL
+# ======================
+CURRENT_SHELL=$(basename "$SHELL")
+ZSH_PATH=$(which zsh)
+
+if [ "$CURRENT_SHELL" != "zsh" ]; then
+    echo
+    read -rp "Do you want to change your default shell to Zsh? [y/N]: " change_shell
+    case "$change_shell" in
+        [yY]|[yY][eE][sS])
+            chsh -s "$ZSH_PATH"
+            echo "Default shell changed to Zsh. Please log out and back in for changes to take effect."
+            ;;
+        *)
+            echo "Skipping changing default shell."
+            ;;
+    esac
+fi
+
+# ======================
+# FONTS
+# ======================
+mkdir -p "$FONT_DIR"
+cd "$FONT_DIR"
+curl -OL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraMono.tar.xz
+tar xf FiraMono.tar.xz
+fc-cache -fv
+
+# ======================
+# SOURCE TOOLS
+# ======================
+echo "Installing from source"
+bash "$LOCAL_BIN/update_sources"
+
+echo "Setup complete. Log out and back in for changes to take effect."
+
