@@ -1,31 +1,78 @@
 #!/usr/bin/env bash
 #
-# Update and rebuild all tools from source
+# Update and rebuild tools from source
+# Usage:
+#   update_sources [tool_name]
 #
 
 set -euo pipefail
 
+# ======================
+# CONFIG
+# ======================
 GH_SRC_DIR="${GH_SRC_DIR:-$HOME/.local/src}"
 LOCAL_BIN="${LOCAL_BIN:-$HOME/.local/bin}"
 CONFIG_FILE="${CONFIG_FILE:-$HOME/.config/source-tools.conf}"
 
 mkdir -p "$GH_SRC_DIR" "$LOCAL_BIN"
 
+TARGET_TOOL="${1:-}"
+
+# ======================
+# FUNCTION: trim whitespace
+# ======================
+trim() {
+    echo "$1" | xargs
+}
+
+# ======================
+# READ CONFIG AND PROCESS TOOLS
+# ======================
 while IFS='|' read -r name repo build_cmd; do
-    [ -z "$name" ] && continue
-    dest="$GH_SRC_DIR/$name"
-    echo "🔄 Updating $name..."
-    if [ ! -d "$dest/.git" ]; then
-        echo "📦 Cloning $name..."
-        git clone --depth=1 "$repo" "$dest"
-    else
-        git -C "$dest" pull
+    # Skip empty lines and comments
+    [[ -z "$name" || "$name" == \#* ]] && continue
+
+    # Trim whitespace
+    name=$(trim "$name")
+    repo=$(trim "$repo")
+    build_cmd=$(trim "$build_cmd")
+
+    # If a target tool is specified, skip others
+    if [[ -n "$TARGET_TOOL" && "$name" != "$TARGET_TOOL" ]]; then
+        continue
     fi
+
+    dest="$GH_SRC_DIR/$name"
+    echo "Processing $name ($repo)..."
+
+    if [[ ! -d "$dest/.git" ]]; then
+        echo "Cloning $name..."
+        if ! git clone --depth=1 "$repo" "$dest"; then
+            echo "Failed to clone $name from $repo"
+            continue
+        fi
+    else
+        echo "🔄 Updating $name..."
+        if ! git -C "$dest" pull; then
+            echo "Failed to update $name, skipping build"
+            continue
+        fi
+    fi
+
     cd "$dest"
-    echo "⚙️ Rebuilding $name..."
-    eval "$build_cmd"
-    echo "✅ $name updated successfully."
+
+    echo "⚙️ Building $name..."
+    if ! eval "$build_cmd"; then
+        echo "Build failed for $name, continuing with next tool"
+        continue
+    fi
+
+    echo "$name installed/updated successfully"
+
 done < "$CONFIG_FILE"
 
-echo "🎉 All source tools updated."
-
+if [[ -n "$TARGET_TOOL" ]]; then
+    echo "$TARGET_TOOL installation/update complete."
+else
+    echo "All source tools updated."
+fi
