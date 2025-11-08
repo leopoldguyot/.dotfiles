@@ -46,7 +46,7 @@ $UPDATE_CMD
 # INSTALL BASE PACKAGES
 # ======================
 echo "Installing base packages..."
-$INSTALL_CMD git stow tmux zsh fzf curl wget build-essential ninja-build gettext cmake unzip pkg-config libtool libtool-bin autoconf automake g++ cargo python3-pip fontconfig python3-pip
+$INSTALL_CMD git stow tmux zsh fzf curl wget build-essential ninja-build gettext cmake unzip pkg-config libtool libtool-bin autoconf automake g++ cargo python3-pip fontconfig python3-pip gh neofetch
 if [ "$PKG_MANAGER" = "apt" ]; then
     $INSTALL_CMD nala
 fi
