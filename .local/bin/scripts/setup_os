@@ -12,7 +12,7 @@ GH_SRC_DIR="$HOME/.local/src"
 LOCAL_BIN="$HOME/.local/bin"
 CONFIG_FILE="$HOME/.config/source-tools.conf"
 I3_PACKAGES="i3 i3status i3lock dmenu xbacklight feh thunar"
-SWAY_PACKAGES="sway swaybg swayidle waybar wl-clipboard grim slurp mako thunar"
+SWAY_PACKAGES="sway swaybg swayidle waybar wl-clipboard grim slurp thunar"
 
 mkdir -p "$GH_SRC_DIR" "$LOCAL_BIN"
 
@@ -46,7 +46,7 @@ $UPDATE_CMD
 # INSTALL BASE PACKAGES
 # ======================
 echo "Installing base packages..."
-$INSTALL_CMD git stow tmux zsh fzf curl wget build-essential ninja-build gettext cmake unzip pkg-config libtool libtool-bin autoconf automake g++ cargo python3-pip fontconfig python3-pip gh neofetch
+$INSTALL_CMD git stow tmux zsh fzf curl wget build-essential r-base r-base-dev ninja-build gettext cmake unzip pkg-config libtool libtool-bin autoconf automake g++ cargo python3-pip pipx fontconfig python3-pip gh neofetch
 if [ "$PKG_MANAGER" = "apt" ]; then
     $INSTALL_CMD nala
 fi
@@ -111,7 +111,7 @@ fi
 # RADIAN
 # ======================
 if ! command -v radian &>/dev/null; then
-    pip3 install --user radian || echo "Python not found, skipping radian."
+    pipx install radian
 fi
 
 # ======================
@@ -152,7 +152,7 @@ fc-cache -fv
 # SOURCE TOOLS
 # ======================
 echo "Installing from source"
-bash "$LOCAL_BIN/update_sources"
+bash "$LOCAL_BIN/scripts/update_source"
 
 echo "Setup complete. Log out and back in for changes to take effect."
 
