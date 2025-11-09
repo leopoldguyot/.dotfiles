@@ -5,7 +5,7 @@ set -euo pipefail
 # CONFIG
 # ======================
 DOTFILES_DIR="$HOME/.dotfiles"
-ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/oh-my-zsh-custom}"
 FONT_DIR="$HOME/.fonts"
 TMUX_TPM_DIR="$HOME/.config/tmux/tpm"
 GH_SRC_DIR="$HOME/.local/src"
@@ -93,12 +93,19 @@ fi
 # ======================
 # ZSH PLUGINS
 # ======================
+
 mkdir -p "$ZSH_CUSTOM/plugins"
+
+# Only install external plugins (the built-ins like git, z are already in oh-my-zsh)
 for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
     if [ ! -d "$ZSH_CUSTOM/plugins/$plugin" ]; then
+        echo "Installing Zsh plugin: $plugin"
         git clone https://github.com/zsh-users/$plugin.git "$ZSH_CUSTOM/plugins/$plugin"
+    else
+        echo "Zsh plugin $plugin already installed, skipping."
     fi
 done
+
 
 # ======================
 # TMUX TPM
