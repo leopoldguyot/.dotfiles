@@ -75,8 +75,9 @@ plugins=(git z zsh-autosuggestions)
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
-# Personal scripts:
-export PATH="$HOME/.local/bin/scripts:$PATH"
+# Add all user binaries and personal scripts
+export PATH="$HOME/.local/bin:$HOME/.local/bin/scripts:$PATH"
+
 
 
 # export MANPATH="/usr/local/man:$MANPATH"
