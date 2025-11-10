@@ -3,7 +3,7 @@
 1. Clone this repository
 
 ``` console
-git clone https://github.com/<your-username>/.dotfiles.git ~/.dotfiles
+git clone https://github.com/leopoldguyot/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 
