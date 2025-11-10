@@ -12,7 +12,9 @@ GH_SRC_DIR="$HOME/.local/src"
 LOCAL_BIN="$HOME/.local/bin"
 CONFIG_FILE="$HOME/.config/source-tools.conf"
 I3_PACKAGES="i3 i3status i3lock dmenu xbacklight feh thunar"
-SWAY_PACKAGES="sway swaybg swayidle waybar wl-clipboard grim slurp thunar"
+SWAY_PACKAGES="sway swaybg swayidle waybar wl-clipboard grim slurp thunar \
+fuzzel swaylock wlogout brightnessctl playerctl pavucontrol \
+pipewire wireplumber power-profiles-daemon"
 
 mkdir -p "$GH_SRC_DIR" "$LOCAL_BIN"
 
@@ -46,7 +48,7 @@ $UPDATE_CMD
 # INSTALL BASE PACKAGES
 # ======================
 echo "Installing base packages..."
-$INSTALL_CMD git stow tmux zsh fzf curl wget build-essential r-base r-base-dev ninja-build gettext cmake unzip pkg-config libtool libtool-bin autoconf automake g++ rustup python3 python3-pip pipx fontconfig python3-pip gh neofetch libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev 
+$INSTALL_CMD git stow tmux zsh fzf curl wget build-essential r-base r-base-dev ninja-build gettext cmake unzip pkg-config libtool libtool-bin autoconf automake g++ rustup python3 python3-pip pipx fontconfig python3-pip gh neofetch libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev network-manager
 if [ "$PKG_MANAGER" = "apt" ]; then
     $INSTALL_CMD nala
 fi
@@ -159,7 +161,7 @@ fc-cache -fv
 # SOURCE TOOLS
 # ======================
 echo "Installing from source"
-bash "$LOCAL_BIN/scripts/update_source"
+bash "$LOCAL_BIN/scripts/update-source"
 
 echo "Setup complete. Log out and back in for changes to take effect."
 

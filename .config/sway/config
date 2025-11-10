@@ -44,7 +44,7 @@ output eDP-1 {
 }
 # Wallpaper:
 
-output eDP-1 bg ~/Pictures/wallpapers/bouscarle.jpg fill
+output eDP-1 bg ~/bg/mesangeazzuree.jpg fill
 
 # Example configuration:
 #
