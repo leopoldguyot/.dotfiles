@@ -46,12 +46,12 @@ fd | https://github.com/sharkdp/fd.git | cargo build --release && cp target/rele
 
 | Path                          | Purpose                                     |
 | ----------------------------- | ------------------------------------------- |
-| `~/.dotfiles`                 | Your dotfiles repository (cloned here)      |
-| `~/.local/bin`                | User-level binaries (installed tools)       |
+| `~/.dotfiles`                 | dotfiles repository                         |
+| `~/.local/bin`                | User-level binaries                         |
 | `~/.local/bin/scripts`        | Personal helper scripts                     |
 | `~/.local/src`                | GitHub source repositories cloned for build |
 | `~/.config/source-tools.conf` | Tool definitions for builds from source     |
-| `~/.oh-my-zsh`                | Oh My Zsh framework                         |
-| `~/.fonts`                    | Custom fonts (e.g., Nerd Fonts)             |
+| `~/.oh-my-zsh-custom`         | Oh My Zsh directory                         |
+| `~/.fonts`                    | Custom fonts                                |
 
 
