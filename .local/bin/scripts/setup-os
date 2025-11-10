@@ -11,10 +11,6 @@ TMUX_TPM_DIR="$HOME/.config/tmux/tpm"
 GH_SRC_DIR="$HOME/.local/src"
 LOCAL_BIN="$HOME/.local/bin"
 CONFIG_FILE="$HOME/.config/source-tools.conf"
-I3_PACKAGES="i3 i3status i3lock dmenu xbacklight feh thunar"
-SWAY_PACKAGES="sway swaybg swayidle waybar wl-clipboard grim slurp thunar \
-fuzzel swaylock wlogout brightnessctl playerctl pavucontrol \
-pipewire wireplumber power-profiles-daemon"
 
 mkdir -p "$GH_SRC_DIR" "$LOCAL_BIN"
 
@@ -22,21 +18,81 @@ mkdir -p "$GH_SRC_DIR" "$LOCAL_BIN"
 # DETECT PACKAGE MANAGER
 # ======================
 if command -v apt &>/dev/null; then
-    PKG_MANAGER="apt"
-    UPDATE_CMD="sudo apt update"
-    INSTALL_CMD="sudo apt install -y"
+    # Attempt to install nala first if not available
+    echo "Detected apt-based system."
+    if ! command -v nala &>/dev/null; then
+        echo "Installing nala (improved apt frontend)..."
+        sudo apt update
+        sudo apt install -y nala || echo "Failed to install nala, falling back to apt."
+    fi
+
+    if command -v nala &>/dev/null; then
+        PKG_MANAGER="nala"
+        UPDATE_CMD="sudo nala update && sudo nala upgrade -y"
+        INSTALL_CMD="sudo nala install -y"
+    else
+        PKG_MANAGER="apt"
+        UPDATE_CMD="sudo apt update && sudo apt upgrade -y"
+        INSTALL_CMD="sudo apt install -y"
+    fi
+
 elif command -v dnf &>/dev/null; then
     PKG_MANAGER="dnf"
-    UPDATE_CMD="sudo dnf check-update || true"
+    UPDATE_CMD="sudo dnf upgrade -y"
     INSTALL_CMD="sudo dnf install -y"
+
 elif command -v pacman &>/dev/null; then
     PKG_MANAGER="pacman"
-    UPDATE_CMD="sudo pacman -Sy"
+    UPDATE_CMD="sudo pacman -Syu --noconfirm"
     INSTALL_CMD="sudo pacman -S --noconfirm"
+
 else
     echo "Unsupported package manager. Install manually."
     exit 1
 fi
+
+echo "Using package manager: $PKG_MANAGER"
+echo
+
+# ======================
+# PACKAGE LISTS
+# ======================
+
+# ---- Common base packages ----
+BASE_COMMON="git stow tmux zsh fzf curl wget  fontconfig gh neofetch firefox htop btop"
+DEV_COMMON="cmake ninja-build gettext unzip pkg-config libtool autoconf automake g++ rustup python3 python3-pip pipx"
+R_PACKAGES="r-base r-base-dev"
+NETWORK_TOOLS="network-manager"
+
+# ---- Common WM packages ----
+I3_COMMON="i3 i3status i3lock dmenu feh thunar"
+SWAY_COMMON="sway"
+
+# ---- Per-distro specifics ----
+case "$PKG_MANAGER" in
+    apt|nala)
+        BASE_PACKAGES="$BASE_COMMON $DEV_COMMON $R_PACKAGES $NETWORK_TOOLS build-essential \
+            libtool-bin libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev"
+        I3_EXTRA="xbacklight"
+        SWAY_EXTRA=""
+        ;;
+    dnf)
+        BASE_PACKAGES="$BASE_COMMON $DEV_COMMON $R_PACKAGES $NETWORK_TOOLS @development-tools \
+            libtool fontconfig-devel libxcb-devel libxkbcommon-devel"
+        I3_EXTRA="xbacklight"
+        SWAY_EXTRA=""
+        ;;
+    pacman)
+        BASE_PACKAGES="$BASE_COMMON $DEV_COMMON $R_PACKAGES $NETWORK_TOOLS base-devel \
+            libtool fontconfig libxcb libxkbcommon"
+        I3_EXTRA="xorg-xbacklight i3-wm"
+        SWAY_EXTRA=""
+        ;;
+esac
+
+# Merge the lists
+I3_PACKAGES="$I3_COMMON $I3_EXTRA"
+SWAY_PACKAGES="$SWAY_COMMON $SWAY_EXTRA"
 
 # ======================
 # UPDATE SYSTEM
@@ -48,15 +104,11 @@ $UPDATE_CMD
 # INSTALL BASE PACKAGES
 # ======================
 echo "Installing base packages..."
-$INSTALL_CMD git stow tmux zsh fzf curl wget build-essential r-base r-base-dev ninja-build gettext cmake unzip pkg-config libtool libtool-bin autoconf automake g++ rustup python3 python3-pip pipx fontconfig python3-pip gh neofetch libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev network-manager
-if [ "$PKG_MANAGER" = "apt" ]; then
-    $INSTALL_CMD nala
-fi
+$INSTALL_CMD $BASE_PACKAGES
 
 # ======================
 # INSTALL WM PACKAGES
 # ======================
-
 echo
 echo "Optional window manager installation"
 echo "1) i3 (X11)"
@@ -83,10 +135,9 @@ esac
 echo
 
 # ======================
-# Install OH MY ZSH
+# OH MY ZSH
 # ======================
-
-echo "Installing oh-my-zsh"
+echo "Installing oh-my-zsh..."
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c \
         "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -95,10 +146,7 @@ fi
 # ======================
 # ZSH PLUGINS
 # ======================
-
 mkdir -p "$ZSH_CUSTOM/plugins"
-
-# Only install external plugins (the built-ins like git, z are already in oh-my-zsh)
 for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
     if [ ! -d "$ZSH_CUSTOM/plugins/$plugin" ]; then
         echo "Installing Zsh plugin: $plugin"
@@ -107,7 +155,6 @@ for plugin in zsh-autosuggestions zsh-syntax-highlighting; do
         echo "Zsh plugin $plugin already installed, skipping."
     fi
 done
-
 
 # ======================
 # TMUX TPM
@@ -126,7 +173,9 @@ fi
 # ======================
 # DOTFILES
 # ======================
-bash "$DOTFILES_DIR/.local/bin/scripts/sync-dotfiles"
+if [ -x "$DOTFILES_DIR/.local/bin/scripts/sync-dotfiles" ]; then
+    bash "$DOTFILES_DIR/.local/bin/scripts/sync-dotfiles"
+fi
 
 # ======================
 # DEFAULT SHELL
@@ -160,8 +209,10 @@ fc-cache -fv
 # ======================
 # SOURCE TOOLS
 # ======================
-echo "Installing from source"
-bash "$LOCAL_BIN/scripts/update-source"
+echo "Installing from source..."
+if [ -x "$LOCAL_BIN/scripts/update-source" ]; then
+    bash "$LOCAL_BIN/scripts/update-source"
+fi
 
 echo "Setup complete. Log out and back in for changes to take effect."
 

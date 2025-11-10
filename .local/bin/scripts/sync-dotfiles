@@ -1,39 +1,103 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -euo pipefail
 
+# ======================
+# COLORS
+# ======================
 GREEN='\033[1;32m'
 BLUE='\033[1;34m'
-RED='\033[1;30m'
+RED='\033[1;31m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# ======================
+# SETUP
+# ======================
+cd "$(dirname "$(readlink -f "$0")")/.."
 
-cd "$(dirname "$(readlink -f "$0")")"
-cd ..
+for cmd in git stow; do
+    if ! command -v "$cmd" &>/dev/null; then
+        echo -e "${RED}Error: '$cmd' is not installed or not in PATH.${NC}" >&2
+        exit 1
+    fi
+done
 
-echo -e "${BLUE}Stashing existing changes...${NC}"
-stash_result=$(git stash push -m "sync-dotfiles: Before syncing dotfiles")
-needs_pop=1
-if [ "$stash_result" = "No local changes to save" ]; then
-	needs_pop=0
+# ======================
+# GIT OPERATIONS
+# ======================
+echo -e "${BLUE}Checking for local changes...${NC}"
+if ! git diff-index --quiet HEAD --; then
+    echo -e "${BLUE}Stashing existing changes...${NC}"
+    STASH_NAME="sync-dotfiles-$(date +%s)"
+    git stash push -m "$STASH_NAME" >/dev/null
+    needs_pop=1
+else
+    needs_pop=0
 fi
 
-echo -e "${BLUE}Pulling updates from dotfiles repo...${NC}"
-echo
-git pull origin main
-echo
+# Detect main branch name safely
+MAIN_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@' || echo "main")
+
+echo -e "${BLUE}Pulling updates from remote branch '${MAIN_BRANCH}'...${NC}"
+git fetch origin "$MAIN_BRANCH" >/dev/null
+git pull origin "$MAIN_BRANCH"
 
 if [ "$needs_pop" -eq 1 ]; then
-	echo -e "${BLUE}Popping stashed changes...${NC}"
-	echo
-	git stash pop
+    echo
+    echo -e "${BLUE}Restoring stashed changes...${NC}"
+    stash_ref=$(git stash list | grep "$STASH_NAME" | head -n1 | cut -d: -f1 || true)
+    if [ -n "$stash_ref" ]; then
+        git stash pop "$stash_ref" || {
+            echo -e "${RED}Warning: Conflicts occurred while applying stashed changes.${NC}"
+        }
+    fi
 fi
 
-unmerged_files=$(git diff --name-only --diff-filter=U)
-if [ ! -z "$unmerged_files" ]; then
-	echo -e "${RED}The following files have merge conflicts after popping the stash:${NC}"
-	echo
-	printf "%s\n" "$unmerged_files"
-else
-	stow -d ~/.dotfiles -t ~/ .
-    echo -e "${GREEN}Dotfiles successfully stowed!${NC}"
+# ======================
+# MERGE CONFLICT CHECK
+# ======================
+if git diff --name-only --diff-filter=U | grep -q .; then
+    echo
+    echo -e "${RED}Merge conflicts detected! Please resolve them before proceeding.${NC}"
+    git diff --name-only --diff-filter=U
+    exit 1
 fi
+
+# ======================
+# STOW PREPARATION — CLEAN EXISTING FILES
+# ======================
+echo
+echo -e "${BLUE}Checking for existing files that may block stow...${NC}"
+
+BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y-%m-%d_%H-%M-%S)"
+mkdir -p "$BACKUP_DIR"
+
+# Get a list of files stow would manage (by dry-run)
+STOW_CONFLICTS=$(stow -d ~/.dotfiles -t ~/ --no --verbose 2>&1 | grep -E 'existing target is not a link' || true)
+
+if [ -n "$STOW_CONFLICTS" ]; then
+    echo -e "${YELLOW}Found existing files that conflict with stow. Backing them up...${NC}"
+    echo "$STOW_CONFLICTS" | while read -r line; do
+        # Extract path like `/home/user/.bashrc`
+        path=$(echo "$line" | sed -E 's/.*existing target is not a link: //')
+        [ -f "$path" ] || [ -d "$path" ] || continue
+        rel=$(basename "$path")
+        echo -e "  Moving ${BLUE}$path${NC} -> ${YELLOW}$BACKUP_DIR/$rel${NC}"
+        mv "$path" "$BACKUP_DIR/"
+    done
+    echo -e "${GREEN}Backup complete! Old files moved to:${NC} ${BACKUP_DIR}"
+else
+    echo -e "${GREEN}No conflicting files found.${NC}"
+fi
+
+# ======================
+# STOW DOTFILES
+# ======================
+echo
+echo -e "${BLUE}Stowing dotfiles...${NC}"
+stow -d ~/.dotfiles -t ~/ --verbose .
+
+echo -e "${GREEN}Dotfiles successfully synchronized and stowed!${NC}"
+echo
+echo -e "${BLUE}Backup of replaced files (if any):${NC} $BACKUP_DIR"
 
