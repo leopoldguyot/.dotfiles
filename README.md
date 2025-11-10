@@ -1,13 +1,15 @@
 
 # Quick Start: New Computer Setup
-1. Clone this repository
+1. Install dependencies
+   - [git](https://git-scm.com/)
+2. Clone this repository
 
 ``` console
 git clone https://github.com/leopoldguyot/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 
-2. Run the setup script
+3. Run the setup script
 
 ``` console
 ./.local/bin/scripts/setup-os
@@ -25,7 +27,7 @@ The setup script will:
 - Install the FiraMono Nerd Font
 - Install or update programs built from source
 
-3. Restart or log out/in
+4. Restart or log out/in
 
 # Updating tools installed from source
 
