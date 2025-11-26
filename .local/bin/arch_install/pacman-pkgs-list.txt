@@ -9,7 +9,7 @@ nano
 
 ## dev
 neovim
-gh
+github-cli
 
 ## Network
 networkmanager
