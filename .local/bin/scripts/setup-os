@@ -28,7 +28,7 @@ if command -v apt &>/dev/null; then
 
     if command -v nala &>/dev/null; then
         PKG_MANAGER="nala"
-        UPDATE_CMD="sudo nala update && sudo nala upgrade -y"
+        UPDATE_CMD="sudo nala update && sudo nala upgrade"
         INSTALL_CMD="sudo nala install -y"
     else
         PKG_MANAGER="apt"
@@ -59,7 +59,7 @@ echo
 # ======================
 
 # ---- Common base packages ----
-BASE_COMMON="git stow tmux zsh fzf curl wget  fontconfig gh neofetch firefox htop btop"
+BASE_COMMON="git stow tmux zsh fzf curl wget  fontconfig gh neofetch firefox htop btop meson wget build-essential ninja-build cmake-extras cmake gettext gettext-base fontconfig libfontconfig-dev libffi-dev libxml2-dev libdrm-dev libxkbcommon-x11-dev libxkbregistry-dev libxkbcommon-dev libpixman-1-dev libudev-dev libseat-dev seatd libxcb-dri3-dev libegl-dev libgles2 libegl1-mesa-dev glslang-tools libinput-bin libinput-dev libxcb-composite0-dev libavutil-dev libavcodec-dev libavformat-dev libxcb-ewmh2 libxcb-ewmh-dev libxcb-present-dev libxcb-icccm4-dev libxcb-render-util0-dev libxcb-res0-dev libxcb-xinput-dev libtomlplusplus3 libre2-dev"
 DEV_COMMON="cmake ninja-build gettext unzip pkg-config libtool autoconf automake g++ rustup python3 python3-pip pipx"
 R_PACKAGES="r-base r-base-dev"
 NETWORK_TOOLS="network-manager"

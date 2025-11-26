@@ -47,7 +47,7 @@ while IFS='|' read -r name repo build_cmd; do
 
     if [[ ! -d "$dest/.git" ]]; then
         echo "Cloning $name..."
-        if ! git clone --depth=1 "$repo" "$dest"; then
+        if ! git clone --recursive --depth=1 "$repo" "$dest"; then
             echo "Failed to clone $name from $repo"
             continue
         fi
