@@ -9,6 +9,7 @@ nano
 
 ## dev
 neovim
+gh
 
 ## Network
 networkmanager
@@ -19,9 +20,8 @@ dunst
 grim
 sddm
 kitty
-iws
 openssh
-polkit-kde-agebt
+polkit-kde-agent
 qt5-wayland
 qt6-wayland
 slurp
