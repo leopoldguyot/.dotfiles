@@ -1,5 +1,12 @@
 # pacman packages
 
+## base
+git
+stow
+htop
+btop
+nano
+
 ## dev
 neovim
 
@@ -7,6 +14,21 @@ neovim
 networkmanager
 
 ## Hyprland
+dolphin
+dunst
+grim
+sddm
 kitty
+iws
+openssh
+polkit-kde-agebt
+qt5-wayland
+qt6-wayland
+slurp
+wget
+wireless_tools
+wofi
+wpa_supplicant
 hyprland
+xdg-utils
 xdg-desktop-portal-hyprland
