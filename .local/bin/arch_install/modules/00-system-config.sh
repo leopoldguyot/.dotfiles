@@ -8,7 +8,7 @@ sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 sed -i 's/^#fr_BE.UTF-8 UTF-8/fr_BE.UTF-8 UTF-8/' /etc/locale.gen
 
 # Generate updated locales
-locale-gen
+sudo locale-gen
 
 # System-wide locale configuration
 cat > /etc/locale.conf <<EOF
