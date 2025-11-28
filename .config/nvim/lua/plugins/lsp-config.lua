@@ -15,7 +15,6 @@ return {
 				"clangd",
 				"html",
 				"jsonls",
-				"julials",
 				"ltex",
 				"lua_ls",
 				"marksman",
@@ -41,9 +40,6 @@ return {
 				capabilities = capabilities,
 			})
 			lspconfig.jsonls.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.julials.setup({
 				capabilities = capabilities,
 			})
 			lspconfig.ltex.setup({

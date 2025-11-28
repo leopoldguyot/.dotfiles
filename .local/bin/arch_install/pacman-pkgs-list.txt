@@ -1,18 +1,41 @@
 # pacman packages
 
+## libs
+ffmpeg
+7zip
+jq
+poppler
+fd
+fzf
+zoxide
+resvg
+imagemagick
+base-devel
+ttf-font-awesome
+curl
+
+
 ## base
 git
 stow
 htop
 btop
 nano
+zsh
 
-## dev
+## devtools
 neovim
+bash-language-server
+ripgrep
+yazi
 github-cli
+foot
 
 ## Network
 networkmanager
+
+# R
+
 
 ## Hyprland
 dolphin
@@ -32,3 +55,4 @@ wpa_supplicant
 hyprland
 xdg-utils
 xdg-desktop-portal-hyprland
+waybar

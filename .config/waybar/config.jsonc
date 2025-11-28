@@ -1,10 +1,10 @@
 {
     "layer": "top",
     "output": "eDP-1",
-    "modules-left": ["sway/workspaces", "sway/mode"],
-    "modules-center": ["sway/window"],
+    "modules-left": ["hyprland/workspaces", "hyprland/mode"],
+    "modules-center": ["hyprland/window"],
     "modules-right": ["battery", "clock"],
-    "sway/window": {
+    "hyprland/window": {
         "max-length": 50
     },
     "battery": {
@@ -13,5 +13,16 @@
     },
     "clock": {
         "format-alt": "{:%a, %d. %b  %H:%M}"
-    }
+    },
+    "hyprland/workspaces": {
+        "disable-scroll": true,
+        "all-outputs": true,
+        "warp-on-scroll": false,
+        "format": "{name}: {icon}",
+        "format-icons": {
+            "urgent": "",
+            "active": "",
+            "default": ""
+        }
+    },
 }
