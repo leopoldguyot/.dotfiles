@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+WALLPAPER_DIR="$HOME/bg"
+
+# launch picker
+SELECTED=$(ls "$WALLPAPER_DIR" | wofi --show dmenu --prompt "Wallpaper:")
+[ -z "$SELECTED" ] && exit
+
+FULLPATH="$WALLPAPER_DIR/$SELECTED"
+
+# preload image
+hyprctl hyprpaper preload "$FULLPATH"
+
+# set wallpaper on all monitors
+for MON in $(hyprctl monitors | grep "Monitor" | awk '{print $2}')
+do
+    hyprctl hyprpaper wallpaper "$MON,$FULLPATH"
+done
+

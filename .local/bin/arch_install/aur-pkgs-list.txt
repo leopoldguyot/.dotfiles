@@ -1,8 +1,13 @@
 # AUR packages
 
+## Hyprland
+
 ## cli tools
 getnf
 wlogout
 
 ## R
 rstudio-desktop-bin
+
+## Com
+zulip-desktop

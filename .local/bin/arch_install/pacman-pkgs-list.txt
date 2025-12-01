@@ -60,3 +60,4 @@ brightnessctl
 ttf-font-awesome
 lm_sensors
 pamixer
+hyprlock
