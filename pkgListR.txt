@@ -61,7 +61,6 @@ clipr
 clue
 coda
 collections
-colorout
 colorspace
 commonmark
 ComplexHeatmap
@@ -236,7 +235,6 @@ MatrixGenerics
 MatrixModels
 matrixStats
 mclust
-MDSvis
 memoise
 MetaboCoreUtils
 metapod
@@ -315,7 +313,6 @@ ps
 PSMatch
 purrr
 QFeatures
-QFeaturesGUI
 quantreg
 R.cache
 R.methodsS3
@@ -376,7 +373,6 @@ rsvd
 Rtsne
 RUnit
 rversions
-rWSBIM1322
 S4Arrays
 S4Vectors
 S7
@@ -388,7 +384,6 @@ scater
 scattermore
 scDD
 scp
-SCP.replication
 scpdata
 scran
 sctransform
@@ -470,8 +465,6 @@ variancePartition
 vctrs
 vegan
 VennDiagram
-VerR
-VerRGUI
 vipor
 viridis
 viridisLite

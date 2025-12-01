@@ -11,6 +11,8 @@ resvg
 imagemagick
 base-devel
 curl
+cmake
+jdk-openjdk
 
 
 ## base
@@ -21,6 +23,7 @@ btop
 nano
 zsh
 thunar
+bat
 
 ## devtools
 neovim
@@ -35,6 +38,7 @@ networkmanager
 
 # R
 r
+gcc-fortran
 
 ## Hyprland
 dolphin
