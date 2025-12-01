@@ -2,3 +2,7 @@
 
 ## cli tools
 getnf
+wlogout
+
+## R
+rstudio-desktop-bin

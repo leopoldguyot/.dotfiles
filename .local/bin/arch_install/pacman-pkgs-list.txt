@@ -1,5 +1,4 @@
 # pacman packages
-
 ## libs
 ffmpeg
 7zip
@@ -11,7 +10,6 @@ zoxide
 resvg
 imagemagick
 base-devel
-ttf-font-awesome
 curl
 
 
@@ -22,6 +20,7 @@ htop
 btop
 nano
 zsh
+thunar
 
 ## devtools
 neovim
@@ -35,7 +34,7 @@ foot
 networkmanager
 
 # R
-
+r
 
 ## Hyprland
 dolphin
@@ -54,5 +53,10 @@ wofi
 wpa_supplicant
 hyprland
 xdg-utils
+hyprpaper
 xdg-desktop-portal-hyprland
 waybar
+brightnessctl
+ttf-font-awesome
+lm_sensors
+pamixer
