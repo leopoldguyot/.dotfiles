@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -e
+
+ARCH_DIR="$HOME/.local/bin/arch_install"
+source $ARCH_DIR/lib/helpers.sh
+
+PACMAN_SCRIPT="$ARCH_DIR/modules/01-pacman-pkgs.sh"
+AUR_SCRIPT="$ARCH_DIR/modules/02-aur-pkgs.sh"
+PACMAN_TXT="$ARCH_DIR/pacman-pkgs-list.txt"
+AUR_TXT="$ARCH_DIR/aur-pkgs-list.txt"
+
+echo "[+] Starting updating pacman pkgs"
+echo "[+] Using $PACMAN_TXT"
+
+source $PACMAN_SCRIPT
+
+echo "[+] Starting updating aur pkgs"
+echo "[+] Using $AUR_TXT"
+
+source $AUR_SCRIPT
+
+echo "[+] Packages update done!"
+

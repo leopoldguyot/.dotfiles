@@ -77,6 +77,8 @@ source $ZSH/oh-my-zsh.sh
 # User configuration
 # Add all user binaries and personal scripts
 export PATH="$HOME/.local/bin:$HOME/.local/bin/scripts:$PATH"
+# Add arch package update
+export PATH="$HOME/.local/bin/arch_install:$PATH"
 
 
 
@@ -102,18 +104,7 @@ export PATH="$HOME/.local/bin:$HOME/.local/bin/scripts:$PATH"
 # - $ZSH_CUSTOM/macos.zsh
 # For a full list of active aliases, run `alias`.
 
+export EDITOR=nvim
 
-# >>> mamba initialize >>>
-# !! Contents within this block are managed by 'micromamba shell init' !!
-export MAMBA_EXE='/home/lguyot/.dotfiles/.local/bin/micromamba';
-export MAMBA_ROOT_PREFIX='/home/lguyot/micromamba';
-__mamba_setup="$("$MAMBA_EXE" shell hook --shell zsh --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__mamba_setup"
-else
-    alias micromamba="$MAMBA_EXE"  # Fallback on help from micromamba activate
-fi
-unset __mamba_setup
-# <<< mamba initialize <<<
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

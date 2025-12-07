@@ -1,13 +1,24 @@
 # AUR packages
 
+## Dev
+jdk18-openjdk
+
 ## Hyprland
+wlogout
 
 ## cli tools
 getnf
-wlogout
+openvpn3
 
 ## R
 rstudio-desktop-bin
 
 ## Com
 zulip-desktop
+
+## media
+deezer
+
+## Divers
+
+zotero

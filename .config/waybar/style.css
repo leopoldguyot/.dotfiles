@@ -53,3 +53,18 @@ window#waybar {
     background: #4c4c4c;
 }
 
+#tray menu {
+
+    background-color: #32302f;
+    
+    border: 1px solid #905b15;
+    
+    color: #d4be98;
+    
+    font-size: 22px; 
+    
+    padding: 4px; }
+
+#tray menu menuitem:hover {
+    background-color: #6d4c23; 
+}

@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
+ARCH_DIR="$HOME/.local/bin/arch_install"
+
 echo "[Module] Installing AUR packages with paru"
 
 # Make sure the AUR package list exists
-if [ ! -f aur-pkgs-list.txt ]; then
+if [ ! -f $ARCH_DIR/aur-pkgs-list.txt ]; then
     echo "ERROR: aur-pkgs-list.txt not found!"
     exit 1
 fi
@@ -35,7 +37,7 @@ else
 fi
 
 # Read AUR package list
-aur_packages=$(grep -vE '^\s*#' aur-pkgs-list.txt | tr '\n' ' ')
+aur_packages=$(grep -vE '^\s*#' $ARCH_DIR/aur-pkgs-list.txt | tr '\n' ' ')
 if [[ -z "$aur_packages" ]]; then
     echo "[!] No AUR packages to install."
     exit 0

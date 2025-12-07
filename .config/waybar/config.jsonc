@@ -15,15 +15,14 @@
         "network",
         "pulseaudio",
         "battery",
+        "clock",
+        "tray",
         "custom/power"
     ],
 
     "hyprland/workspaces": {
         "disable-scroll": true,
         "format": "{icon}",
-        "persistent-workspaces": {
-            "*": [ 1,2,3,4,5,6 ]
-        },
         "format-icons": {
             "1": "",
             "2": "󰈹",
@@ -37,7 +36,7 @@
             "10": ""
         },
         "active-only": false,
-        "all-outputs": true
+        "all-outputs": false 
     },
 
     "custom/player": {
@@ -49,18 +48,23 @@
     "pulseaudio": {
         "scroll-step": 5,
         "format": "  {volume}%",
-        "format-muted": "  Muted"
+        "format-muted": "  Muted",
+        "on-click": "pavucontrol"
     },
-
     "network": {
         "format-wifi": "  {signalStrength}%",
         "format-ethernet": "󰈁  Online",
-        "format-disconnected": "  Offline"
+        "format-disconnected": "  Offline",
+        "on-click": "wifimenu --wofi"
     },
 
     "battery": {
         "format": "{capacity}% {icon}",
         "format-icons": ["", "", "", "", ""]
+    },
+
+    "clock": {
+        "format": "{:%d. %b  %H:%M}"
     },
 
     "custom/power": {
@@ -79,7 +83,9 @@
     },
 
     "temperature": {
-        "format": "  {temperatureC}°C"
+        "format": "  {temperatureC}°C",
+        "thermal-zone": 7,
+        "hwmon-path" : "/sys/devices/platform/coretemp.0/hwmon/hwmon6/temp1_input" 
     }
 }
 

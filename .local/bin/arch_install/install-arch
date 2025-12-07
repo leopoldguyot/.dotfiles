@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-source lib/helpers.sh
+ARCH_DIR="$HOME/.local/bin/arch_install"
+source $ARCH_DIR/lib/helpers.sh
 
 echo "[+] Arch Setup Starting"
 
-for module in modules/*.sh; do
+for module in $ARCH_DIR/modules/*.sh; do
     echo "[+] Running $module"
     source "$module"
 done
