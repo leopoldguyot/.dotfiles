@@ -9,6 +9,7 @@ wlogout
 ## cli tools
 getnf
 openvpn3
+networkmanager-openvpn
 
 ## R
 rstudio-desktop-bin

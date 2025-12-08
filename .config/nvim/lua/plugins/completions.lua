@@ -7,6 +7,7 @@ return {
 		dependencies = {
 			"saadparwaiz1/cmp_luasnip",
 			"rafamadriz/friendly-snippets",
+            "hrsh7th/cmp-path",
 		},
 	},
 	{
@@ -35,11 +36,28 @@ return {
 				}),
 				sources = cmp.config.sources({
 					{ name = "nvim_lsp" },
-					{ name = "luasnip" }, -- For luasnip users.
+					{ name = "luasnip" },
+                    {name = 'path' },
 				}, {
 					{ name = "buffer" },
 				}),
 			})
 		end,
 	},
+    {
+        'windwp/nvim-autopairs',
+        event = "InsertEnter",
+        config = function()
+            require('nvim-autopairs').setup({
+                check_ts = true,
+                enable_check_bracket_line = true,
+            })
+            local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+            local cmp = require('cmp')
+            cmp.event:on(
+                'confirm_done',
+                cmp_autopairs.on_confirm_done()
+            )
+        end,
+    },
 }

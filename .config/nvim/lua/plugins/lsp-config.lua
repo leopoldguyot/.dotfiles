@@ -1,67 +1,27 @@
 return {
-	{
-		"williamboman/mason.nvim",
-		lazy = false,
-		config = function()
-			require("mason").setup()
-		end,
-	},
-	{
-		"williamboman/mason-lspconfig.nvim",
-		lazy = false,
-		opts = {
-			ensure_installed = {
-				"bashls",
-				"clangd",
-				"html",
-				"jsonls",
-				"ltex",
-				"lua_ls",
-				"marksman",
-				"r_language_server",
-				"pylsp",
-			},
-		},
-	},
-	{
-		"neovim/nvim-lspconfig",
-		lazy = false,
-		config = function()
-			local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
-			local lspconfig = require("lspconfig")
-			lspconfig.bashls.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.clangd.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.html.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.jsonls.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.ltex.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.lua_ls.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.marksman.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.r_language_server.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.pylsp.setup({
-				capabilities = capabilities,
-			})
-
-			vim.keymap.set("n", "K", vim.lsp.buf.hover, {desc = "Hover"})
-			vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, {desc = "get definition"})
-			vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, {desc = "get reference"})
-			vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {desc = "code action"})
-		end,
-	},
+    {
+    "williamboman/mason.nvim",
+    config = function()
+      require("mason").setup()
+    end
+    },
+    {
+    "williamboman/mason-lspconfig.nvim",
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = { "lua_ls" , "r_language_server"}
+      })
+    end
+    },
+    {
+    "neovim/nvim-lspconfig",
+    config = function()
+        vim.lsp.config("lspconfig", {})
+        vim.lsp.enable({"lspconfig"})
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, {desc = "Hover"})
+        vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, {desc = "get definition"})
+        vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, {desc = "get reference"})
+        vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {desc = "code action"})
+    end,
+    },
 }
