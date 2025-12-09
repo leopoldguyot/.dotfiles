@@ -1,7 +1,6 @@
 # AUR packages
 
 ## Dev
-jdk18-openjdk
 
 ## Hyprland
 wlogout
