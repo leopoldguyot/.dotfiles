@@ -1,4 +1,4 @@
-# Intersting Plugins
+# Plugin ideas
 
 - gitsigns.nvim
 - indent-blankline.nvim
@@ -18,6 +18,15 @@
 - telescope-git-branch.nvim
 - lazygit.nvim
 - gh.nvim
+
+# To install:
+
+- indent-blankline.nvim
+- Comment.nvim
+- noice.nvim
+- nvim-surround
+- nvim-luxmotion
+- lazygit.nvim
 
 Find ways to make diagnostics better
 better separation between planes (highlight)
