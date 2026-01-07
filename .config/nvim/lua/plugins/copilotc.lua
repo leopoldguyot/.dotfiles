@@ -2,35 +2,29 @@ return {
   {
     "CopilotC-Nvim/CopilotChat.nvim",
     dependencies = {
-      "github/copilot.vim",
-      "nvim-lua/plenary.nvim",
+      { "nvim-lua/plenary.nvim", branch = "master" },
     },
     build = "make tiktoken",
-
     opts = {
-      mappings = {
-        submit_prompt = {
-          normal = "<Leader>s",
-        },
-      },
-      window = {
-        layout = "float",    -- 'vertical', 'horizontal', 'float', 'replace'
-        relative = "win",    -- 'editor', 'win', 'cursor', 'mouse'
-        border = "single",   -- 'none', 'single', 'double', 'rounded', 'solid', 'shadow'
-        title = "Chat",
-      },
-    },
+        {
+          window = {
+            layout = 'float',
+            width = 80, -- Fixed width in columns
+            height = 20, -- Fixed height in rows
+            border = 'rounded', -- 'single', 'double', 'rounded', 'solid'
+            title = '🤖 AI Assistant',
+            zindex = 100, -- Ensure window stays on top
+          },
 
-    keys = {
-      { "<Leader>co", function() require("CopilotChat").open_chat() end,   desc = "CopilotChat: Open" },
-      { "<Leader>cc", function() require("CopilotChat").close_chat() end,  desc = "CopilotChat: Close" },
-      { "<Leader>cs", function() require("CopilotChat").submit_prompt() end, desc = "CopilotChat: Submit" },
-      { "<Leader>ct", function() require("CopilotChat").toggle_chat() end, desc = "CopilotChat: Toggle" },
-    },
+          headers = {
+            user = '👤 You',
+            assistant = '🤖 Copilot',
+            tool = '🔧 Tool',
+          },
 
-    config = function(_, opts)
-      require("CopilotChat").setup(opts)
-    end,
+          separator = '━━',
+          auto_fold = true, -- Automatically folds non-assistant messages
+        }
+    },
   },
 }
-

@@ -28,6 +28,21 @@ nano
 zsh
 thunar
 bat
+tlp
+tlp-rdw
+
+## printers
+cups 
+cups-pdf
+ghostscript
+gsfonts
+gutenprint
+foomatic-db-engine
+foomatic-db
+foomatic-db-ppds
+system-config-printer
+mupdf
+
 
 ## devtools
 neovim
@@ -72,4 +87,5 @@ pamixer
 hyprlock
 pavucontrol
 blueman
-
+intel-ucode
+thermald
