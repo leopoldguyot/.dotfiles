@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+set -uo pipefail
+
+MAX_PAGES=17
+DUPLEX_OPTION="two-sided-long-edge"
+
+DRY_RUN=false
+ROOT_DIR=""
+
+# Parse arguments
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run)
+            DRY_RUN=true
+            ;;
+        *)
+            ROOT_DIR="$arg"
+            ;;
+    esac
+done
+
+if [[ -z "$ROOT_DIR" ]]; then
+    echo "Usage: $0 [--dry-run] /path/to/root_folder"
+    exit 1
+fi
+
+if [[ ! -d "$ROOT_DIR" ]]; then
+    echo "Error: '$ROOT_DIR' is not a directory"
+    exit 1
+fi
+
+mapfile -d '' PDFs < <(find "$ROOT_DIR" -type f -iname "*.pdf" -print0)
+
+TOTAL=${#PDFs[@]}
+COUNT=0
+PRINTED=0
+
+echo "Found $TOTAL PDF files"
+[[ "$DRY_RUN" == true ]] && echo "Running in DRY-RUN mode"
+echo
+
+for pdf in "${PDFs[@]}"; do
+    ((COUNT++))
+
+    pages=$(pdfinfo "$pdf" 2>/dev/null | awk '/^Pages:/ {print $2}')
+    [[ -z "$pages" ]] && pages=0
+
+    printf "[%d/%d] " "$COUNT" "$TOTAL"
+
+    if (( pages > 0 && pages <= MAX_PAGES )); then
+        if [[ "$DRY_RUN" == true ]]; then
+            echo "Would print: $pdf ($pages pages)"
+        else
+            echo "Printing: $pdf ($pages pages)"
+            lp -o sides="$DUPLEX_OPTION" "$pdf"
+            ((PRINTED++))
+        fi
+    else
+        echo "Skipped: $pdf ($pages pages)"
+    fi
+done
+
+echo
+echo "Done."
+[[ "$DRY_RUN" == false ]] && echo "Printed $PRINTED PDFs"
+

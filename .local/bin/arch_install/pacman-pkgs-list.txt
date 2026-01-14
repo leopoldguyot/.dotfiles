@@ -30,6 +30,7 @@ thunar
 bat
 tlp
 tlp-rdw
+texlive
 
 ## printers
 cups 
