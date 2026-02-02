@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#' @rdname INTERNAL_loading
 set -e
 
 ARCH_DIR="$HOME/.local/bin/arch_install"

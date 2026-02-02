@@ -1,4 +1,5 @@
 # AUR packages
+paru
 
 ## Dev
 
