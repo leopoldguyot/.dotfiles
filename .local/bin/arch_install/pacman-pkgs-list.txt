@@ -18,6 +18,7 @@ npm
 protobuf
 python-pipx
 python-pip
+hdf5
 
 ## base
 git
@@ -60,6 +61,7 @@ networkmanager
 r
 gcc-fortran
 zathura
+zathura-pdf-poppler
 
 ## Hyprland
 dolphin
