@@ -9,6 +9,14 @@ Regenerate with `~/.local/bin/scripts/update-hypr-keybinds-readme`.
 - `$terminal` = `foot`
 - `$menu` = `wofi --show drun`
 
+## Keyboard layout
+
+_Note: workspace and close-window binds are loaded from the active layout source file._
+
+| Shortcut | Dispatcher | Params | Bind flags | Comment |
+| --- | --- | --- | --- | --- |
+| `SUPER + F1` | `exec` | `~/.local/bin/scripts/keyboard-layout-switcher` | `regular` | `Run \`~/.local/bin/scripts/keyboard-layout-switcher\`` |
+
 ## Session & launchers
 
 | Shortcut | Dispatcher | Params | Bind flags | Comment |
@@ -23,11 +31,11 @@ Regenerate with `~/.local/bin/scripts/update-hypr-keybinds-readme`.
 
 | Shortcut | Dispatcher | Params | Bind flags | Comment |
 | --- | --- | --- | --- | --- |
-| `SUPER + SHIFT + A` | `killactive` | `-` | `regular` | `Close active window` |
 | `SUPER + F` | `fullscreen` | `-` | `regular` | `Toggle fullscreen for active window` |
 | `SUPER + V` | `togglefloating` | `-` | `regular` | `Toggle floating mode for active window` |
 | `SUPER + P` | `pseudo` | `-` | `regular` | `Toggle pseudotile for active window` |
 | `SUPER + T` | `togglesplit` | `-` | `regular` | `Toggle split orientation in dwindle layout` |
+| `SUPER + SHIFT + code:24` | `killactive` | `-` | `regular` | `Close active window` |
 | `SUPER + left` | `movefocus` | `l` | `regular` | `Move focus left` |
 | `SUPER + right` | `movefocus` | `r` | `regular` | `Move focus right` |
 | `SUPER + up` | `movefocus` | `u` | `regular` | `Move focus up` |
@@ -53,28 +61,26 @@ _Note: workspace keys use French keysyms (`ampersand`, `eacute`, etc.)._
 
 | Shortcut | Dispatcher | Params | Bind flags | Comment |
 | --- | --- | --- | --- | --- |
-| `SUPER + ampersand` | `workspace` | `1` | `regular` | `Switch to workspace 1` |
-| `SUPER + eacute` | `workspace` | `2` | `regular` | `Switch to workspace 2` |
-| `SUPER + quotedbl` | `workspace` | `3` | `regular` | `Switch to workspace 3` |
-| `SUPER + apostrophe` | `workspace` | `4` | `regular` | `Switch to workspace 4` |
-| `SUPER + parenleft` | `workspace` | `5` | `regular` | `Switch to workspace 5` |
-| `SUPER + minus` | `workspace` | `6` | `regular` | `Switch to workspace 6` |
-| `SUPER + section` | `workspace` | `6` | `regular` | `Switch to workspace 6` |
-| `SUPER + egrave` | `workspace` | `7` | `regular` | `Switch to workspace 7` |
-| `SUPER + underscore` | `workspace` | `8` | `regular` | `Switch to workspace 8` |
-| `SUPER + ccedilla` | `workspace` | `9` | `regular` | `Switch to workspace 9` |
-| `SUPER + agrave` | `workspace` | `10` | `regular` | `Switch to workspace 10` |
-| `SUPER + SHIFT + ampersand` | `movetoworkspace` | `1` | `regular` | `Send active window to workspace 1` |
-| `SUPER + SHIFT + eacute` | `movetoworkspace` | `2` | `regular` | `Send active window to workspace 2` |
-| `SUPER + SHIFT + quotedbl` | `movetoworkspace` | `3` | `regular` | `Send active window to workspace 3` |
-| `SUPER + SHIFT + apostrophe` | `movetoworkspace` | `4` | `regular` | `Send active window to workspace 4` |
-| `SUPER + SHIFT + parenleft` | `movetoworkspace` | `5` | `regular` | `Send active window to workspace 5` |
-| `SUPER + SHIFT + minus` | `movetoworkspace` | `6` | `regular` | `Send active window to workspace 6` |
-| `SUPER + SHIFT + section` | `movetoworkspace` | `6` | `regular` | `Send active window to workspace 6` |
-| `SUPER + SHIFT + egrave` | `movetoworkspace` | `7` | `regular` | `Send active window to workspace 7` |
-| `SUPER + SHIFT + underscore` | `movetoworkspace` | `8` | `regular` | `Send active window to workspace 8` |
-| `SUPER + SHIFT + ccedilla` | `movetoworkspace` | `9` | `regular` | `Send active window to workspace 9` |
-| `SUPER + SHIFT + agrave` | `movetoworkspace` | `10` | `regular` | `Send active window to workspace 10` |
+| `SUPER + code:10` | `workspace` | `1` | `regular` | `Switch to workspace 1` |
+| `SUPER + code:11` | `workspace` | `2` | `regular` | `Switch to workspace 2` |
+| `SUPER + code:12` | `workspace` | `3` | `regular` | `Switch to workspace 3` |
+| `SUPER + code:13` | `workspace` | `4` | `regular` | `Switch to workspace 4` |
+| `SUPER + code:14` | `workspace` | `5` | `regular` | `Switch to workspace 5` |
+| `SUPER + code:15` | `workspace` | `6` | `regular` | `Switch to workspace 6` |
+| `SUPER + code:16` | `workspace` | `7` | `regular` | `Switch to workspace 7` |
+| `SUPER + code:17` | `workspace` | `8` | `regular` | `Switch to workspace 8` |
+| `SUPER + code:18` | `workspace` | `9` | `regular` | `Switch to workspace 9` |
+| `SUPER + code:19` | `workspace` | `10` | `regular` | `Switch to workspace 10` |
+| `SUPER + SHIFT + code:10` | `movetoworkspace` | `1` | `regular` | `Send active window to workspace 1` |
+| `SUPER + SHIFT + code:11` | `movetoworkspace` | `2` | `regular` | `Send active window to workspace 2` |
+| `SUPER + SHIFT + code:12` | `movetoworkspace` | `3` | `regular` | `Send active window to workspace 3` |
+| `SUPER + SHIFT + code:13` | `movetoworkspace` | `4` | `regular` | `Send active window to workspace 4` |
+| `SUPER + SHIFT + code:14` | `movetoworkspace` | `5` | `regular` | `Send active window to workspace 5` |
+| `SUPER + SHIFT + code:15` | `movetoworkspace` | `6` | `regular` | `Send active window to workspace 6` |
+| `SUPER + SHIFT + code:16` | `movetoworkspace` | `7` | `regular` | `Send active window to workspace 7` |
+| `SUPER + SHIFT + code:17` | `movetoworkspace` | `8` | `regular` | `Send active window to workspace 8` |
+| `SUPER + SHIFT + code:18` | `movetoworkspace` | `9` | `regular` | `Send active window to workspace 9` |
+| `SUPER + SHIFT + code:19` | `movetoworkspace` | `10` | `regular` | `Send active window to workspace 10` |
 | `SUPER + M` | `togglespecialworkspace` | `magic` | `regular` | `Toggle special workspace \`magic\`` |
 | `SUPER + SHIFT + M` | `movetoworkspace` | `special:magic` | `regular` | `Send active window to special:magic` |
 | `SUPER + mouse_down` | `workspace` | `e+1` | `regular` | `Switch to next workspace` |

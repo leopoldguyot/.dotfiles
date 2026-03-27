@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+DOTFILES_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+KEYBINDS_DIR="$DOTFILES_DIR/.config/hypr/keybinds"
+ACTIVE_FILE="$KEYBINDS_DIR/layout-active.conf"
+
+declare -A LABEL_TO_LAYOUT=(
+    ["fr"]="fr"
+    ["be"]="be"
+    ["eng"]="us"
+)
+
+declare -A LABEL_TO_BIND_FILE=(
+    ["fr"]="layout-fr.conf"
+    ["be"]="layout-be.conf"
+    ["eng"]="layout-eng.conf"
+)
+
+declare -A LABEL_TO_INDEX=(
+    ["fr"]="0"
+    ["be"]="1"
+    ["eng"]="2"
+)
+
+for required in hyprctl; do
+    if ! command -v "$required" >/dev/null 2>&1; then
+        echo "Missing required command: $required" >&2
+        exit 1
+    fi
+done
+
+if [[ ! -d "$KEYBINDS_DIR" ]]; then
+    echo "Missing keybinds directory: $KEYBINDS_DIR" >&2
+    exit 1
+fi
+
+current_label="fr"
+if [[ -f "$ACTIVE_FILE" ]]; then
+    if grep -q 'layout-be\.conf' "$ACTIVE_FILE"; then
+        current_label="be"
+    elif grep -q 'layout-eng\.conf' "$ACTIVE_FILE"; then
+        current_label="eng"
+    fi
+fi
+
+requested="${1:-}"
+apply_only=0
+if [[ -n "$requested" ]]; then
+    if [[ "$requested" == "next" ]]; then
+        case "$current_label" in
+            fr) SELECTED="be" ;;
+            be) SELECTED="eng" ;;
+            eng) SELECTED="fr" ;;
+        esac
+    elif [[ "$requested" == "apply-current" ]]; then
+        SELECTED="$current_label"
+        apply_only=1
+    else
+        SELECTED="$requested"
+    fi
+else
+    if ! command -v wofi >/dev/null 2>&1; then
+        echo "Missing required command for menu mode: wofi" >&2
+        exit 1
+    fi
+    SELECTED="$(printf '%s\n' fr be eng | wofi --show dmenu --prompt 'Keyboard layout:')"
+    [[ -z "${SELECTED:-}" ]] && exit 0
+fi
+
+if [[ -z "${LABEL_TO_LAYOUT[$SELECTED]:-}" ]]; then
+    echo "Unknown layout selection: $SELECTED" >&2
+    exit 1
+fi
+
+if [[ "$SELECTED" == "$current_label" ]]; then
+    hyprctl switchxkblayout all "${LABEL_TO_INDEX[$SELECTED]}"
+    exit 0
+fi
+
+if [[ "$apply_only" -eq 1 ]]; then
+    hyprctl switchxkblayout all "${LABEL_TO_INDEX[$SELECTED]}"
+    exit 0
+fi
+
+TARGET_BIND_FILE="$KEYBINDS_DIR/${LABEL_TO_BIND_FILE[$SELECTED]}"
+if [[ ! -f "$TARGET_BIND_FILE" ]]; then
+    echo "Missing bind file: $TARGET_BIND_FILE" >&2
+    exit 1
+fi
+
+tmp_file="$(mktemp)"
+cat >"$tmp_file" <<EOF
+source = ~/.dotfiles/.config/hypr/keybinds/${LABEL_TO_BIND_FILE[$SELECTED]}
+EOF
+mv "$tmp_file" "$ACTIVE_FILE"
+
+hyprctl reload
+hyprctl switchxkblayout all "${LABEL_TO_INDEX[$SELECTED]}"
