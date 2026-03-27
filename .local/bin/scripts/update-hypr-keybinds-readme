@@ -1,0 +1,321 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+DEFAULT_HYPR_CONF="$DOTFILES_DIR/.config/hypr/hyprland.conf"
+if [[ ! -f "$DEFAULT_HYPR_CONF" ]]; then
+    DEFAULT_HYPR_CONF="$HOME/.config/hypr/hyprland.conf"
+fi
+
+HYPR_CONF="${1:-$DEFAULT_HYPR_CONF}"
+OUT_FILE="${2:-$(dirname "$HYPR_CONF")/README.md}"
+
+python3 - "$HYPR_CONF" "$OUT_FILE" <<'PY'
+from __future__ import annotations
+
+import re
+import shlex
+import sys
+from collections import OrderedDict
+from pathlib import Path
+
+conf_path = Path(sys.argv[1]).expanduser()
+out_path = Path(sys.argv[2]).expanduser()
+
+if not conf_path.exists():
+    raise SystemExit(f"Config not found: {conf_path}")
+
+lines = conf_path.read_text().splitlines()
+
+var_re = re.compile(r"^\s*(\$[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*(?:#.*)?$")
+bind_re = re.compile(r"^\s*(bind\w*)\s*=\s*(.*?)\s*$")
+
+vars_map: dict[str, str] = {}
+entries: list[dict[str, str]] = []
+
+
+def expand_vars(text: str, mapping: dict[str, str]) -> str:
+    out = text
+    for var, value in mapping.items():
+        out = out.replace(var, value)
+    return out
+
+
+for idx, raw in enumerate(lines, 1):
+    stripped = raw.strip()
+    if not stripped or stripped.startswith("#"):
+        continue
+
+    var_match = var_re.match(raw)
+    if var_match:
+        vars_map[var_match.group(1)] = var_match.group(2).strip()
+        continue
+
+    no_comment = raw.split("#", 1)[0].rstrip()
+    bind_match = bind_re.match(no_comment)
+    if not bind_match:
+        continue
+
+    bind_type = bind_match.group(1)
+    rhs = bind_match.group(2)
+    parts = [part.strip() for part in rhs.split(",")]
+    if len(parts) < 3:
+        continue
+
+    mods = parts[0] if len(parts) > 0 else ""
+    key = parts[1] if len(parts) > 1 else ""
+    dispatcher = parts[2] if len(parts) > 2 else ""
+    params = ", ".join(parts[3:]).strip() if len(parts) > 3 else ""
+
+    mods_expanded = expand_vars(mods, vars_map)
+    params_expanded = expand_vars(params, vars_map)
+
+    mod_tokens = [token for token in mods_expanded.split() if token]
+    shortcut_tokens = mod_tokens + ([key] if key else [])
+    shortcut = " + ".join(shortcut_tokens) if shortcut_tokens else key
+
+    entries.append(
+        {
+            "line": str(idx),
+            "bind_type": bind_type,
+            "shortcut": shortcut,
+            "dispatcher": dispatcher,
+            "params": params_expanded,
+        }
+    )
+
+flag_names = {
+    "l": "locked",
+    "r": "release",
+    "c": "click",
+    "g": "drag",
+    "o": "long-press",
+    "e": "repeat",
+    "n": "non-consuming",
+    "m": "mouse",
+    "t": "transparent",
+    "i": "ignore-mods",
+    "s": "combo",
+    "d": "description",
+    "p": "bypass",
+    "u": "submap-universal",
+    "k": "per-device",
+}
+
+
+def bind_type_label(bind_type: str) -> str:
+    flags = bind_type[4:]
+    if not flags:
+        return "regular"
+    return ", ".join(flag_names.get(ch, ch) for ch in flags)
+
+
+def parse_cmd(params: str) -> list[str]:
+    if not params:
+        return []
+    try:
+        return shlex.split(params)
+    except ValueError:
+        return params.split()
+
+
+def direction_word(token: str) -> str:
+    return {
+        "l": "left",
+        "r": "right",
+        "u": "up",
+        "d": "down",
+        "mon:l": "left monitor",
+        "mon:r": "right monitor",
+    }.get(token, token)
+
+
+def comment_for(entry: dict[str, str], mapping: dict[str, str]) -> str:
+    dispatcher = entry["dispatcher"]
+    params = entry["params"]
+    bind_type = entry["bind_type"]
+    args = parse_cmd(params)
+
+    if dispatcher == "exec":
+        command = args[0] if args else ""
+        if params == mapping.get("$terminal", ""):
+            return "Open terminal"
+        if params == mapping.get("$menu", ""):
+            return "Open application launcher"
+        if command == "hyprlock":
+            return "Lock screen"
+        if command == "hyprcap":
+            mode = args[1] if len(args) > 1 else ""
+            target = " ".join(args[2:])
+            if mode == "shot":
+                if "window:active" in target:
+                    return "Capture screenshot of active window"
+                if "region" in target:
+                    return "Capture screenshot of selected region"
+                return "Capture screenshot interactively"
+            if mode == "rec":
+                if "window:active" in target:
+                    return "Toggle recording for active window"
+                if "region" in target:
+                    return "Toggle recording for selected region"
+                return "Toggle recording interactively"
+        if command == "wpctl":
+            if "set-volume" in args and "5%+" in args:
+                return "Increase output volume by 5%"
+            if "set-volume" in args and "5%-" in args:
+                return "Decrease output volume by 5%"
+            if "@DEFAULT_AUDIO_SOURCE@" in args and "set-mute" in args:
+                return "Toggle microphone mute"
+            if "@DEFAULT_AUDIO_SINK@" in args and "set-mute" in args:
+                return "Toggle output mute"
+        if command == "brightnessctl":
+            if "5%+" in args:
+                return "Increase screen brightness by 5%"
+            if "5%-" in args:
+                return "Decrease screen brightness by 5%"
+        if command == "playerctl":
+            if len(args) > 1 and args[1] == "next":
+                return "Play next media track"
+            if len(args) > 1 and args[1] in {"play-pause", "pause", "play"}:
+                return "Toggle play/pause"
+            if len(args) > 1 and args[1] == "previous":
+                return "Play previous media track"
+        if "wallpaper-picker" in params:
+            return "Open wallpaper picker script"
+        return f"Run `{params}`" if params else "Run command"
+
+    if dispatcher == "killactive":
+        return "Close active window"
+    if dispatcher == "fullscreen":
+        return "Toggle fullscreen for active window"
+    if dispatcher == "exit":
+        return "Exit Hyprland session"
+    if dispatcher == "togglefloating":
+        return "Toggle floating mode for active window"
+    if dispatcher == "pseudo":
+        return "Toggle pseudotile for active window"
+    if dispatcher == "togglesplit":
+        return "Toggle split orientation in dwindle layout"
+    if dispatcher == "movefocus":
+        return f"Move focus {direction_word(params)}"
+    if dispatcher == "movewindow":
+        if params.startswith("mon:"):
+            return f"Move active window to {direction_word(params)}"
+        if bind_type == "bindm":
+            return "Move active window with mouse drag"
+        return f"Move active window {direction_word(params)}"
+    if dispatcher == "resizewindow":
+        return "Resize active window with mouse drag"
+    if dispatcher == "workspace":
+        if params == "e+1":
+            return "Switch to next workspace"
+        if params == "e-1":
+            return "Switch to previous workspace"
+        return f"Switch to workspace {params}"
+    if dispatcher == "movetoworkspace":
+        if params.startswith("special:"):
+            return f"Send active window to {params}"
+        return f"Send active window to workspace {params}"
+    if dispatcher == "togglespecialworkspace":
+        return f"Toggle special workspace `{params}`"
+    if dispatcher == "movecurrentworkspacetomonitor":
+        return f"Move current workspace to {direction_word(params)}"
+
+    return "General bind action"
+
+
+def categorize(entry: dict[str, str], mapping: dict[str, str]) -> str:
+    dispatcher = entry["dispatcher"]
+    params = entry["params"]
+    args = parse_cmd(params)
+    command = args[0] if args else ""
+
+    if dispatcher == "exec" and command == "hyprcap":
+        return "Screenshots & recording"
+    if dispatcher == "exec" and command in {"wpctl", "brightnessctl", "playerctl"}:
+        return "Media, volume & brightness"
+    if dispatcher in {"workspace", "movetoworkspace", "togglespecialworkspace"}:
+        return "Workspaces"
+    if dispatcher == "movecurrentworkspacetomonitor" or (
+        dispatcher == "movewindow" and params.startswith("mon:")
+    ):
+        return "Monitors & displays"
+    if dispatcher in {
+        "movefocus",
+        "movewindow",
+        "killactive",
+        "fullscreen",
+        "togglefloating",
+        "pseudo",
+        "togglesplit",
+        "resizewindow",
+    } or entry["bind_type"] == "bindm":
+        return "Window management"
+    if dispatcher in {"exec", "exit"}:
+        return "Session & launchers"
+    return "Other"
+
+
+def md_code(text: str) -> str:
+    value = text if text else "-"
+    value = value.replace("|", r"\|").replace("`", r"\`")
+    return f"`{value}`"
+
+
+category_order = [
+    "Session & launchers",
+    "Window management",
+    "Workspaces",
+    "Monitors & displays",
+    "Screenshots & recording",
+    "Media, volume & brightness",
+    "Other",
+]
+
+grouped = OrderedDict((category, []) for category in category_order)
+for entry in entries:
+    grouped[categorize(entry, vars_map)].append(entry)
+
+md: list[str] = []
+md.append("# Hyprland Keybinds")
+md.append("")
+md.append("This file is generated from `hyprland.conf`, grouped by purpose.")
+md.append(
+    "Regenerate with `~/.local/bin/scripts/update-hypr-keybinds-readme`."
+)
+md.append("")
+md.append("## Variables")
+md.append("")
+for name in ("$mainMod", "$terminal", "$menu"):
+    if name in vars_map:
+        md.append(f"- `{name}` = `{vars_map[name]}`")
+md.append("")
+
+for category, items in grouped.items():
+    if not items:
+        continue
+
+    md.append(f"## {category}")
+    md.append("")
+    if category == "Workspaces":
+        md.append("_Note: workspace keys use French keysyms (`ampersand`, `eacute`, etc.)._")
+        md.append("")
+
+    md.append("| Shortcut | Dispatcher | Params | Bind flags | Comment |")
+    md.append("| --- | --- | --- | --- | --- |")
+    for entry in items:
+        shortcut = md_code(entry["shortcut"])
+        dispatcher = md_code(entry["dispatcher"])
+        params = md_code(entry["params"])
+        flags = md_code(bind_type_label(entry["bind_type"]))
+        comment = md_code(comment_for(entry, vars_map))
+        md.append(f"| {shortcut} | {dispatcher} | {params} | {flags} | {comment} |")
+    md.append("")
+
+out_path.write_text("\n".join(md).rstrip() + "\n")
+print(f"Wrote {out_path}")
+PY
+
+echo "Generated $OUT_FILE from $HYPR_CONF"
