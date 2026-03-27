@@ -1,19 +1,23 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 22,
+    "height": 28,
+    "spacing": 4,
+    "margin-top": 4,
+    "margin-left": 6,
+    "margin-right": 6,
     "modules-left": [
         "hyprland/workspaces"
     ],
     "modules-center": [
-        "custom/player",
-        "cpu",
-        "memory",
-        "temperature"
+        "hyprland/window",
+        "custom/player"
     ],
     "modules-right": [
-        "network",
-        "pulseaudio",
+        "cpu",
+        "memory",
+        "temperature",
+        "wireplumber",
         "battery",
         "clock",
         "tray",
@@ -22,6 +26,7 @@
 
     "hyprland/workspaces": {
         "disable-scroll": true,
+        "sort-by-number": true,
         "format": "{icon}",
         "format-icons": {
             "1": "",
@@ -39,53 +44,90 @@
         "all-outputs": false 
     },
 
-    "custom/player": {
-        "exec": "playerctl metadata --format '{{ artist }} - {{ title }}' || echo 'No music'",
-        "interval": 5,
-        "format": "  {}"
+    "hyprland/window": {
+        "format": "  {}",
+        "max-length": 50,
+        "separate-outputs": true
     },
 
-    "pulseaudio": {
-        "scroll-step": 5,
-        "format": "  {volume}%",
-        "format-muted": "  Muted",
-        "on-click": "pavucontrol"
+    "custom/player": {
+        "exec-if": "command -v playerctl >/dev/null 2>&1",
+        "exec": "playerctl metadata --format '{{ artist }} - {{ title }}' 2>/dev/null || echo 'No media'",
+        "interval": 2,
+        "max-length": 45,
+        "format": "  {}",
+        "on-click": "playerctl play-pause",
+        "on-scroll-up": "playerctl next",
+        "on-scroll-down": "playerctl previous",
+        "tooltip": false
     },
+
+    "wireplumber": {
+        "scroll-step": 5,
+        "format": "󰕾 {volume}%",
+        "format-muted": "󰝟 muted",
+        "on-click": "pavucontrol",
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "tooltip-format": "{node_name}"
+    },
+
     "network": {
         "format-wifi": "  {signalStrength}%",
-        "format-ethernet": "󰈁  Online",
+        "format-ethernet": "󰈁  Ethernet",
         "format-disconnected": "  Offline",
+        "tooltip-format-wifi": "{essid} ({signalStrength}%)",
+        "tooltip-format-ethernet": "{ifname}",
+        "tooltip-format-disconnected": "Disconnected",
         "on-click": "wifimenu --wofi"
     },
 
     "battery": {
-        "format": "{capacity}% {icon}",
+        "states": {
+            "warning": 25,
+            "critical": 15
+        },
+        "format": "{icon}  {capacity}%",
+        "format-charging": "  {capacity}%",
+        "format-plugged": "  {capacity}%",
+        "format-alt": "{time}",
         "format-icons": ["", "", "", "", ""]
     },
 
     "clock": {
-        "format": "{:%d. %b  %H:%M}"
+        "format": "󰥔  {:%a %d %b  %H:%M}",
+        "format-alt": "  {:%Y-%m-%d}",
+        "tooltip-format": "<tt>{calendar}</tt>"
     },
 
     "custom/power": {
         "format": "",
+        "tooltip": false,
         "on-click": "wlogout"
     },
 
     "cpu": {
         "format": "  {usage}%",
-        "interval": 3
+        "interval": 3,
+        "tooltip-format": "CPU usage: {usage}%"
     },
 
     "memory": {
-        "format": "  {used}GB",
-        "interval": 3
+        "format": "  {used:0.1f}G",
+        "interval": 3,
+        "tooltip-format": "RAM: {used:0.1f}G / {total:0.1f}G"
     },
 
     "temperature": {
         "format": "  {temperatureC}°C",
+        "format-critical": "  {temperatureC}°C",
+        "critical-threshold": 80,
         "thermal-zone": 7,
-        "hwmon-path" : "/sys/devices/platform/coretemp.0/hwmon/hwmon6/temp1_input" 
+        "hwmon-path" : "/sys/devices/platform/coretemp.0/hwmon/hwmon6/temp1_input",
+        "tooltip": false
+    },
+
+    "tray": {
+        "icon-size": 14,
+        "spacing": 8
     }
 }
-
