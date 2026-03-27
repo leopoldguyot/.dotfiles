@@ -36,11 +36,12 @@ window#waybar {
     background: rgba(62, 62, 72, 0.9);
 }
 
-#window,
+#workspaces {
+    margin-left: 6px;
+}
+
 #custom-player,
-#cpu,
-#memory,
-#temperature,
+#custom-resources,
 #battery,
 #wireplumber,
 #clock,
@@ -52,27 +53,37 @@ window#waybar {
     border: 1px solid rgba(105, 105, 120, 0.45);
 }
 
-#window {
-    min-width: 180px;
-}
-
 #custom-player {
-    min-width: 200px;
+    min-width: 120px;
+    padding-left: 7px;
+    padding-right: 7px;
 }
 
-#cpu,
-#memory,
-#temperature,
+#custom-resources,
 #battery,
 #wireplumber {
-    min-width: 70px;
+    min-width: 64px;
+}
+
+#custom-resources {
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 #custom-power:hover {
     background: rgba(210, 113, 126, 0.92);
 }
 
-#temperature.critical,
+#custom-power {
+    min-width: 22px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-right: 6px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 #battery.critical {
     background: rgba(191, 97, 106, 0.95);
     border-color: rgba(255, 170, 170, 0.9);
@@ -85,6 +96,21 @@ window#waybar {
 
 #wireplumber.muted {
     background: rgba(76, 76, 86, 0.95);
+}
+
+#tray {
+    padding: 3px 8px;
+    margin: 3px 0;
+    background: rgba(32, 32, 38, 0.82);
+    border-radius: 12px;
+    border: 1px solid rgba(105, 105, 120, 0.45);
+}
+
+#tray > .passive,
+#tray > .active,
+#tray > .needs-attention {
+    padding-left: 2px;
+    padding-right: 2px;
 }
 
 #tray menu {
