@@ -30,7 +30,7 @@ Local leader is `\` (default).
 | Insert | `<Tab>` / `<CR>` | Confirm completion |
 | Insert (R/Rmd/Quarto) | `<C-S-m>` | Insert `|>` |
 | Normal (R/Rmd/Quarto) | `<LocalLeader>kc` | Insert fenced R chunk |
-| Normal | `<C-h/j/k/l>` | Move across Neovim splits and tmux panes |
+| Normal / Terminal | `<C-h/j/k/l>` | Move across Neovim splits and tmux/zellij panes |
 
 ## Notes
 

@@ -1,0 +1,142 @@
+#!/usr/bin/env zsh
+
+set -euo pipefail
+
+if ! command -v zellij >/dev/null 2>&1; then
+    echo "zellij is not installed. Please install zellij first."
+    exit 1
+fi
+
+if ! command -v fzf >/dev/null 2>&1; then
+    echo "fzf is not installed. Please install fzf first."
+    exit 1
+fi
+
+usage() {
+    echo "Usage: sessionizer [--inside-zellij] [directory]"
+}
+
+force_inside=0
+selected=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --inside-zellij)
+            force_inside=1
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -*)
+            echo "Unknown option: $1"
+            usage
+            exit 1
+            ;;
+        *)
+            if [[ -n "$selected" ]]; then
+                usage
+                exit 1
+            fi
+            selected="$1"
+            ;;
+    esac
+    shift
+done
+
+resolve_layout_path() {
+    local script_dir repo_layout local_layout
+    script_dir="${0:A:h}"
+    repo_layout="${script_dir}/../../../.config/zellij/layouts/sessionizer.kdl"
+    repo_layout="${repo_layout:A}"
+    local_layout="${HOME}/.config/zellij/layouts/sessionizer.kdl"
+
+    if [[ -f "$repo_layout" ]]; then
+        echo "$repo_layout"
+        return 0
+    fi
+
+    if [[ -f "$local_layout" ]]; then
+        echo "$local_layout"
+        return 0
+    fi
+
+    echo "Could not find sessionizer layout file."
+    echo "Expected one of:"
+    echo "  - $repo_layout"
+    echo "  - $local_layout"
+    return 1
+}
+
+if [[ -z "$selected" ]]; then
+    search_roots=()
+
+    for root in "$HOME/Documents" "$HOME/Documents/ULB" "$HOME/Documents/GitHub"; do
+        [[ -d "$root" ]] && search_roots+=("$root")
+    done
+
+    if [[ ${#search_roots[@]} -eq 0 ]]; then
+        echo "No project roots found under ~/Documents."
+        exit 1
+    fi
+
+    selected=$(find "${search_roots[@]}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u | fzf)
+fi
+
+if [[ -z "${selected:-}" ]]; then
+    exit 0
+fi
+
+if [[ ! -d "$selected" ]]; then
+    echo "Directory not found: $selected"
+    exit 1
+fi
+
+selected="${selected:A}"
+layout_path="$(resolve_layout_path)"
+selected_name="$(basename "$selected" | tr '. ' '__' | tr -cs '[:alnum:]_-' '_')"
+selected_name="${selected_name##_}"
+selected_name="${selected_name%%_}"
+[[ -z "$selected_name" ]] && selected_name="session"
+
+if ! zellij list-sessions --short 2>/dev/null | grep -Fxq "$selected_name"; then
+    zellij attach -b -c "$selected_name" >/dev/null 2>&1
+
+    # Give zellij a moment to register the new session before sending actions.
+    for _ in {1..40}; do
+        if zellij list-sessions --short 2>/dev/null | grep -Fxq "$selected_name"; then
+            break
+        fi
+        sleep 0.05
+    done
+
+    new_tab_id="$(zellij --session "$selected_name" action new-tab --layout "$layout_path" --cwd "$selected" --name "main" 2>/dev/null || true)"
+
+    if [[ "$new_tab_id" == <-> ]]; then
+        zellij --session "$selected_name" action close-tab-by-id 0 >/dev/null 2>&1 || true
+    fi
+fi
+
+inside_zellij=0
+if [[ $force_inside -eq 1 ]] || [[ -n "${ZELLIJ:-}" ]] || [[ -n "${ZELLIJ_SESSION_NAME:-}" ]] || [[ -n "${ZELLIJ_PANE_ID:-}" ]]; then
+    inside_zellij=1
+fi
+
+if [[ $inside_zellij -eq 1 ]]; then
+    # Never "attach" from inside zellij: that would nest a second zellij UI in the pane.
+    current_session="${ZELLIJ_SESSION_NAME:-}"
+    if [[ -n "$current_session" ]]; then
+        zellij --session "$current_session" action switch-session "$selected_name"
+        exit 0
+    fi
+
+    # Fallback: try context-based switch. If there is no client context, fail safely.
+    switch_output="$(zellij action switch-session "$selected_name" 2>&1 || true)"
+    if [[ "$switch_output" == *"Please specify the session name to send actions to"* ]]; then
+        echo "Could not switch sessions from this pane (no zellij client context)." >&2
+        echo "Run this manually instead: zellij attach \"$selected_name\"" >&2
+        exit 1
+    fi
+else
+    exec zellij attach "$selected_name"
+fi
