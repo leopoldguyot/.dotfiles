@@ -1,5 +1,15 @@
 #!/usr/bin/env zsh
 
+if ! command -v tmux >/dev/null 2>&1; then
+    echo "tmux is not installed. Please install tmux first."
+    exit 1
+fi
+
+if ! command -v fzf >/dev/null 2>&1; then
+    echo "fzf is not installed. Please install fzf first."
+    exit 1
+fi
+
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
@@ -29,4 +39,3 @@ else
     # If not in a tmux session, attach to the target session
     tmux attach-session -t "$selected_name"
 fi
-

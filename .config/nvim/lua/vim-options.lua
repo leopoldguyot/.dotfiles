@@ -26,3 +26,9 @@ local function show_diagnostics()
 end
 vim.keymap.set("n", "<leader>dh", hide_diagnostics, {desc = "hide diagnostics"})
 vim.keymap.set("n", "<leader>ds", show_diagnostics, {desc = "show diagnostics"})
+
+-- tmux pane navigation interoperability
+vim.keymap.set("n", "<C-h>", "<Cmd>wincmd h<CR>", { desc = "Window left" })
+vim.keymap.set("n", "<C-j>", "<Cmd>wincmd j<CR>", { desc = "Window down" })
+vim.keymap.set("n", "<C-k>", "<Cmd>wincmd k<CR>", { desc = "Window up" })
+vim.keymap.set("n", "<C-l>", "<Cmd>wincmd l<CR>", { desc = "Window right" })

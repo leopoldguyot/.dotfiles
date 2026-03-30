@@ -22,6 +22,10 @@ LocalLeader key: `\` (default)
 | Normal | `<leader>gf` | Format current buffer | `none-ls` |
 | Normal | `<leader>dh` | Hide diagnostics (virtual text/signs/underline) | `vim-options.lua` |
 | Normal | `<leader>ds` | Show diagnostics | `vim-options.lua` |
+| Normal | `<C-h>` | Move to left split | `vim-options.lua` |
+| Normal | `<C-j>` | Move to split below | `vim-options.lua` |
+| Normal | `<C-k>` | Move to split above | `vim-options.lua` |
+| Normal | `<C-l>` | Move to right split | `vim-options.lua` |
 | Normal | `<leader>/` | Toggle line comment (remaps to `gcc`) | `Comment.nvim` |
 | Visual | `<leader>/` | Toggle comment for selection (remaps to `gc`) | `Comment.nvim` |
 | Insert | `<C-b>` | Completion docs scroll up | `nvim-cmp` |
