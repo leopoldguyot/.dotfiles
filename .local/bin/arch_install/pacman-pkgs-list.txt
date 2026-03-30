@@ -33,6 +33,7 @@ tlp
 tlp-rdw
 texlive
 lazygit
+tmux
 
 ## printers
 cups 

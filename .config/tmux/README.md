@@ -1,52 +1,45 @@
-# tmux configuration
-
-This setup is designed to work well on **FR / BE / ENG** keyboards by favoring
-letter- and Ctrl-based bindings over symbol-heavy defaults.
+# tmux notes
 
 ## Prefix
 
-- Primary prefix: `Ctrl+a`
-- Secondary prefix: `Ctrl+b` (kept as fallback)
+- Main prefix: `Ctrl+a`
+- Fallback prefix: `Ctrl+b`
 
-## Important keybinds
+This avoids awkward symbol keys and is easier to keep consistent across FR/BE/ENG layouts.
 
-| Context | Shortcut | Action |
-| --- | --- | --- |
-| Prefix | `r` | Reload `~/.config/tmux/tmux.conf` |
-| Prefix | `c` | New window in current pane path |
-| Prefix | `v` | Split pane left/right |
-| Prefix | `s` | Split pane top/bottom |
-| Prefix | `f` | Launch `~/.local/bin/scripts/tmux-sess` |
-| Prefix | `h/j/k/l` | Move between panes |
-| Prefix | `H/J/K/L` | Resize pane (`-r`, repeatable) |
-| Prefix | `y` | Toggle synchronized panes |
-| Global (no prefix) | `Ctrl+h/j/k/l` | Move across tmux panes (or forward to Neovim split nav) |
-| Global (no prefix) | `Ctrl+\` | Jump to last pane (or forward to Neovim) |
+## Day-to-day keys
 
-## Copy mode (vi)
+| Keys | Action |
+| --- | --- |
+| `prefix + r` | Reload tmux config |
+| `prefix + c` | New window in current path |
+| `prefix + v` | Split left/right |
+| `prefix + s` | Split top/bottom |
+| `prefix + f` | Open `tmux-sess` picker |
+| `prefix + h/j/k/l` | Move between panes |
+| `prefix + H/J/K/L` | Resize pane |
+| `prefix + y` | Toggle synchronized panes |
+| `Ctrl+h/j/k/l` | Move across tmux + Neovim panes |
 
-| Context | Shortcut | Action |
-| --- | --- | --- |
-| Copy mode | `v` | Begin selection |
-| Copy mode | `y` | Copy selection and exit |
+## Copy mode
 
-## Neovim workflow
-
-tmux detects Neovim-like processes and forwards `Ctrl+h/j/k/l` + `Ctrl+\` to
-Neovim when appropriate, otherwise it switches tmux panes. This gives a unified
-navigation flow between Neovim splits and tmux panes.
+| Keys | Action |
+| --- | --- |
+| `v` | Start selection |
+| `y` | Copy and leave copy mode |
 
 ## Plugins
 
 - `rose-pine/tmux`
 - `tmux-plugins/tpm`
+- `christoomey/vim-tmux-navigator`
 
-TPM is loaded from either path (for compatibility):
+TPM is checked in both locations:
 
 - `~/.config/tmux/plugins/tpm/tpm`
 - `~/.config/tmux/tpm/tpm`
 
-## Dependencies
+## Requirements
 
 - `tmux`
-- `fzf` (used by `tmux-sess`)
+- `fzf` (for `tmux-sess`)
