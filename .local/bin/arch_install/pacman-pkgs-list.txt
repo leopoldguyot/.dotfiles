@@ -32,6 +32,7 @@ bat
 tlp
 tlp-rdw
 texlive
+lazygit
 
 ## printers
 cups 

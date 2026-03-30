@@ -9,6 +9,7 @@ return {
     config = function()
         require('r').setup({
             auto_quit = true,
+            register_treesitter = false,
         })
 
         -- Manual keymap for pipe operator and R code block
@@ -34,4 +35,3 @@ return {
         })
     end
 }
-
