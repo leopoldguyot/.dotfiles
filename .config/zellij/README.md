@@ -8,10 +8,11 @@ This setup is meant for A/B testing against tmux without breaking the current Ne
 
 - `Ctrl+h/j/k/l`: move between Neovim splits and zellij panes (bridge enabled)
 - `Alt+h/j/k/l`: move between zellij panes from non-Neovim panes
-- `Alt+v`: split right
-- `Alt+s`: split down
-- `Alt+c`: new tab
-- `Alt+y`: toggle synchronized tab input
+- `Alt+n`: new pane
+- `Alt+i/o`: move tab left/right
+- `Alt+p`: toggle pane in group
+- `Alt+Shift+p`: toggle group marking
+- `Alt+[ / Alt+]`: previous/next swap layout
 - `Alt+f`: open `sessionizer` picker (floating, switches session)
 - `Alt+Shift+f`: toggle floating panes
 
@@ -41,8 +42,12 @@ Inside zellij, open Neovim and test movement with `<C-h/j/k/l>` across splits an
 
 - Run `sessionizer` to pick a project with `fzf`
 - Or run `sessionizer /path/to/project`
+- Optional layout chooser: `sessionizer --choose-layout`
+- Explicit layout: `sessionizer --layout project|split|default|compact`
 - Session name is derived from directory name
-- If session does not exist, it creates it and applies a minimal layout:
-  - left pane ~70%
-  - right pane ~30%
-  - both panes start in the selected project directory
+- Default layout is `project`:
+  - left pane ~70% running `nvim`
+  - right pane ~30% shell
+- Sessionizer layouts include `tab-bar` and `status-bar` plugins (shortcut hints visible)
+- Outside zellij: starts or attaches to that session
+- Inside zellij: switches to that session

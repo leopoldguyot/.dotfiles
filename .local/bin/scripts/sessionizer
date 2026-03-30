@@ -1,142 +1,336 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 set -euo pipefail
 
-if ! command -v zellij >/dev/null 2>&1; then
-    echo "zellij is not installed. Please install zellij first."
-    exit 1
-fi
-
-if ! command -v fzf >/dev/null 2>&1; then
-    echo "fzf is not installed. Please install fzf first."
-    exit 1
-fi
+DEFAULT_LAYOUT="${SESSIONIZER_LAYOUT:-project}"
 
 usage() {
-    echo "Usage: sessionizer [--inside-zellij] [directory]"
+    cat <<'EOF'
+Usage: sessionizer [options] [directory]
+
+Options:
+  --inside-zellij         Switch session when running in zellij
+  --layout <name|path>    Layout preset or .kdl path (default: project)
+  --choose-layout         Prompt to choose a layout after selecting directory
+  -h, --help              Show this help
+
+Layout presets:
+  project   70/30 split with Neovim + shell
+  split     70/30 split with two shell panes
+  default   Zellij's built-in default layout
+  compact   Zellij's built-in compact layout
+EOF
 }
 
-force_inside=0
-selected=""
+require_command() {
+    local cmd="$1"
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "$cmd is not installed. Please install $cmd first." >&2
+        exit 1
+    fi
+}
+
+sanitize_session_name() {
+    local raw="$1"
+    raw="$(basename "$raw" | tr '. ' '__' | tr -cs '[:alnum:]_-' '_')"
+    raw="${raw##_}"
+    raw="${raw%%_}"
+
+    if [[ -z "$raw" ]]; then
+        echo "session"
+        return
+    fi
+
+    echo "$raw"
+}
+
+canonical_path() {
+    local target="$1"
+    local dir
+    local base
+
+    dir="$(cd "$(dirname "$target")" && pwd -P)"
+    base="$(basename "$target")"
+    printf '%s/%s\n' "$dir" "$base"
+}
+
+resolve_layout_dir() {
+    local candidate
+    for candidate in \
+        "$HOME/.config/zellij/layouts" \
+        "$HOME/.dotfiles/.config/zellij/layouts"; do
+        if [[ -d "$candidate" ]]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    echo "$HOME/.config/zellij/layouts"
+}
+
+resolve_layout_target() {
+    local requested="$1"
+    local layout_dir="$2"
+    local candidate=""
+    local -a layout_roots=(
+        "$layout_dir"
+        "$HOME/.config/zellij/layouts"
+        "$HOME/.dotfiles/.config/zellij/layouts"
+    )
+    local root
+
+    case "$requested" in
+        project)
+            for root in "${layout_roots[@]}"; do
+                candidate="$root/sessionizer-project.kdl"
+                if [[ -f "$candidate" ]]; then
+                    canonical_path "$candidate"
+                    return 0
+                fi
+            done
+            ;;
+        split|sessionizer)
+            for root in "${layout_roots[@]}"; do
+                candidate="$root/sessionizer.kdl"
+                if [[ -f "$candidate" ]]; then
+                    canonical_path "$candidate"
+                    return 0
+                fi
+            done
+            ;;
+        default|compact|classic|strider)
+            echo "$requested"
+            return 0
+            ;;
+        *)
+            if [[ -f "$requested" ]]; then
+                canonical_path "$requested"
+                return 0
+            fi
+            for root in "${layout_roots[@]}"; do
+                if [[ -f "$root/$requested" ]]; then
+                    canonical_path "$root/$requested"
+                    return 0
+                fi
+                if [[ -f "$root/$requested.kdl" ]]; then
+                    canonical_path "$root/$requested.kdl"
+                    return 0
+                fi
+            done
+            ;;
+    esac
+
+    echo "Unknown layout: $requested" >&2
+    echo "Use one of: project, split, default, compact, or a .kdl path." >&2
+    return 1
+}
+
+pick_directory() {
+    local -a roots=()
+    local root
+
+    for root in \
+        "$HOME/dev" \
+        "$HOME/Documents" \
+        "$HOME/Documents/GitHub" \
+        "$HOME/Documents/ULB"; do
+        [[ -d "$root" ]] && roots+=("$root")
+    done
+
+    if [[ ${#roots[@]} -eq 0 ]]; then
+        echo "No project roots found. Pass a directory explicitly." >&2
+        return 1
+    fi
+
+    if command -v fd >/dev/null 2>&1; then
+        fd . "${roots[@]}" --min-depth 1 --max-depth 2 --type d 2>/dev/null | sort -u | fzf
+        return
+    fi
+
+    find "${roots[@]}" -mindepth 1 -maxdepth 2 -type d 2>/dev/null | sort -u | fzf
+}
+
+pick_layout() {
+    printf '%s\n' \
+        "project: Neovim + shell (70/30)" \
+        "split: two shell panes (70/30)" \
+        "default: zellij built-in default" \
+        "compact: zellij built-in compact" \
+        | fzf --prompt="Layout > " --height=40% --reverse \
+        | awk -F': ' '{print $1}'
+}
+
+session_exists() {
+    local session="$1"
+    zellij list-sessions --short 2>/dev/null | grep -Fxq "$session"
+}
+
+session_has_hint_bar() {
+    local session="$1"
+    zellij --session "$session" action dump-layout 2>/dev/null \
+        | grep -Eq 'plugin location="(zellij:)?(status-bar|compact-bar)"'
+}
+
+ensure_layout_hints() {
+    local session="$1"
+    local layout="$2"
+    local layout_choice="$3"
+
+    if [[ ! -f "$layout" ]]; then
+        return 0
+    fi
+
+    # Old sessionizer sessions could miss status/compact bars; patch them in-place.
+    if [[ "$layout_choice" == "project" || "$layout_choice" == "split" || "$layout_choice" == "sessionizer" ]]; then
+        if ! session_has_hint_bar "$session"; then
+            zellij --session "$session" action override-layout "$layout" \
+                --retain-existing-terminal-panes \
+                --retain-existing-plugin-panes >/dev/null 2>&1 || true
+        fi
+    fi
+}
+
+ensure_session_exists() {
+    local session="$1"
+    local cwd="$2"
+    local layout="$3"
+
+    if session_exists "$session"; then
+        return 1
+    fi
+
+    (
+        cd "$cwd"
+        zellij attach -b -c "$session" options --default-layout "$layout" --default-cwd "$cwd" >/dev/null 2>&1
+    )
+
+    return 0
+}
+
+inside_flag=0
+choose_layout=0
+layout_from_arg=0
+layout_choice="$DEFAULT_LAYOUT"
+selected_path=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --inside-zellij)
-            force_inside=1
+            inside_flag=1
+            ;;
+        --layout)
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "Missing value for --layout" >&2
+                usage >&2
+                exit 1
+            fi
+            if [[ $choose_layout -eq 1 ]]; then
+                echo "Use either --layout or --choose-layout, not both." >&2
+                exit 1
+            fi
+            layout_from_arg=1
+            layout_choice="$1"
+            ;;
+        --choose-layout)
+            if [[ $layout_from_arg -eq 1 ]]; then
+                echo "Use either --layout or --choose-layout, not both." >&2
+                exit 1
+            fi
+            choose_layout=1
             ;;
         -h|--help)
             usage
             exit 0
             ;;
         -*)
-            echo "Unknown option: $1"
-            usage
+            echo "Unknown option: $1" >&2
+            usage >&2
             exit 1
             ;;
         *)
-            if [[ -n "$selected" ]]; then
-                usage
+            if [[ -n "$selected_path" ]]; then
+                echo "Only one directory argument is supported." >&2
+                usage >&2
                 exit 1
             fi
-            selected="$1"
+            selected_path="$1"
             ;;
     esac
     shift
 done
 
-resolve_layout_path() {
-    local script_dir repo_layout local_layout
-    script_dir="${0:A:h}"
-    repo_layout="${script_dir}/../../../.config/zellij/layouts/sessionizer.kdl"
-    repo_layout="${repo_layout:A}"
-    local_layout="${HOME}/.config/zellij/layouts/sessionizer.kdl"
+require_command "zellij"
 
-    if [[ -f "$repo_layout" ]]; then
-        echo "$repo_layout"
-        return 0
-    fi
-
-    if [[ -f "$local_layout" ]]; then
-        echo "$local_layout"
-        return 0
-    fi
-
-    echo "Could not find sessionizer layout file."
-    echo "Expected one of:"
-    echo "  - $repo_layout"
-    echo "  - $local_layout"
-    return 1
-}
-
-if [[ -z "$selected" ]]; then
-    search_roots=()
-
-    for root in "$HOME/Documents" "$HOME/Documents/ULB" "$HOME/Documents/GitHub"; do
-        [[ -d "$root" ]] && search_roots+=("$root")
-    done
-
-    if [[ ${#search_roots[@]} -eq 0 ]]; then
-        echo "No project roots found under ~/Documents."
-        exit 1
-    fi
-
-    selected=$(find "${search_roots[@]}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -u | fzf)
+if [[ -z "$selected_path" ]]; then
+    require_command "fzf"
+    selected_path="$(pick_directory || true)"
 fi
 
-if [[ -z "${selected:-}" ]]; then
+if [[ $choose_layout -eq 1 ]]; then
+    require_command "fzf"
+    layout_choice="$(pick_layout || true)"
+fi
+
+if [[ -z "${selected_path:-}" ]]; then
     exit 0
 fi
 
-if [[ ! -d "$selected" ]]; then
-    echo "Directory not found: $selected"
+if [[ -z "${layout_choice:-}" ]]; then
+    exit 0
+fi
+
+if [[ ! -d "$selected_path" ]]; then
+    echo "Directory not found: $selected_path" >&2
     exit 1
 fi
 
-selected="${selected:A}"
-layout_path="$(resolve_layout_path)"
-selected_name="$(basename "$selected" | tr '. ' '__' | tr -cs '[:alnum:]_-' '_')"
-selected_name="${selected_name##_}"
-selected_name="${selected_name%%_}"
-[[ -z "$selected_name" ]] && selected_name="session"
+selected_path="$(cd "$selected_path" && pwd -P)"
+layout_dir="$(resolve_layout_dir)"
+layout_target="$(resolve_layout_target "$layout_choice" "$layout_dir")"
+session_name="$(sanitize_session_name "$selected_path")"
 
-if ! zellij list-sessions --short 2>/dev/null | grep -Fxq "$selected_name"; then
-    zellij attach -b -c "$selected_name" >/dev/null 2>&1
-
-    # Give zellij a moment to register the new session before sending actions.
-    for _ in {1..40}; do
-        if zellij list-sessions --short 2>/dev/null | grep -Fxq "$selected_name"; then
-            break
-        fi
-        sleep 0.05
-    done
-
-    new_tab_id="$(zellij --session "$selected_name" action new-tab --layout "$layout_path" --cwd "$selected" --name "main" 2>/dev/null || true)"
-
-    if [[ "$new_tab_id" == <-> ]]; then
-        zellij --session "$selected_name" action close-tab-by-id 0 >/dev/null 2>&1 || true
-    fi
+actual_inside_zellij=0
+if [[ -n "${ZELLIJ:-}" ]] || [[ -n "${ZELLIJ_SESSION_NAME:-}" ]] || [[ -n "${ZELLIJ_PANE_ID:-}" ]]; then
+    actual_inside_zellij=1
 fi
 
-inside_zellij=0
-if [[ $force_inside -eq 1 ]] || [[ -n "${ZELLIJ:-}" ]] || [[ -n "${ZELLIJ_SESSION_NAME:-}" ]] || [[ -n "${ZELLIJ_PANE_ID:-}" ]]; then
+inside_zellij=$actual_inside_zellij
+if [[ $inside_flag -eq 1 ]]; then
     inside_zellij=1
 fi
 
+session_was_created=0
+if ensure_session_exists "$session_name" "$selected_path" "$layout_target"; then
+    session_was_created=1
+else
+    ensure_result=$?
+    if [[ $ensure_result -ne 1 ]]; then
+        exit "$ensure_result"
+    fi
+fi
+
+if [[ $session_was_created -eq 0 ]]; then
+    ensure_layout_hints "$session_name" "$layout_target" "$layout_choice"
+fi
+
 if [[ $inside_zellij -eq 1 ]]; then
-    # Never "attach" from inside zellij: that would nest a second zellij UI in the pane.
-    current_session="${ZELLIJ_SESSION_NAME:-}"
-    if [[ -n "$current_session" ]]; then
-        zellij --session "$current_session" action switch-session "$selected_name"
+    if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
+        zellij --session "$ZELLIJ_SESSION_NAME" action switch-session --cwd "$selected_path" "$session_name"
         exit 0
     fi
 
-    # Fallback: try context-based switch. If there is no client context, fail safely.
-    switch_output="$(zellij action switch-session "$selected_name" 2>&1 || true)"
-    if [[ "$switch_output" == *"Please specify the session name to send actions to"* ]]; then
-        echo "Could not switch sessions from this pane (no zellij client context)." >&2
-        echo "Run this manually instead: zellij attach \"$selected_name\"" >&2
+    if zellij action switch-session --cwd "$selected_path" "$session_name"; then
+        exit 0
+    fi
+
+    if [[ $actual_inside_zellij -eq 1 ]]; then
+        echo "Could not switch sessions from this zellij context." >&2
+        echo "Try manually: zellij action switch-session \"$session_name\"" >&2
         exit 1
     fi
-else
-    exec zellij attach "$selected_name"
+
+    exec zellij attach "$session_name"
 fi
+
+exec zellij attach "$session_name"

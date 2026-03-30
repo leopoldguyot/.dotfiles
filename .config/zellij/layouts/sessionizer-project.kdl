@@ -3,7 +3,9 @@ layout {
         plugin location="tab-bar"
     }
     pane split_direction="vertical" {
-        pane focus=true size="70%"
+        pane size="70%" focus=true {
+            command "nvim"
+        }
         pane size="30%"
     }
     pane size=1 borderless=true {
