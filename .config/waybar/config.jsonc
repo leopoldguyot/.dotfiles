@@ -18,6 +18,7 @@
         "battery",
         "custom/player",
         "tray",
+        "custom/notifications",
         "custom/power"
     ],
 
@@ -55,15 +56,32 @@
 
     "custom/resources": {
         "exec": "~/.local/bin/scripts/waybar-resources",
-        "interval": 4,
+        "interval": 2,
         "format": "{}",
-        "tooltip": false
+        "tooltip": true,
+        "on-click": "~/.local/bin/scripts/waybar-resources toggle",
+        "on-click-right": "~/.local/bin/scripts/waybar-open-btop",
+        "on-click-middle": "~/.local/bin/scripts/waybar-resources compact"
+    },
+
+    "custom/notifications": {
+        "exec": "~/.local/bin/scripts/waybar-notifications",
+        "return-type": "json",
+        "interval": 2,
+        "format": "{}",
+        "align": 0.5,
+        "justify": "center",
+        "min-length": 2,
+        "tooltip": true,
+        "on-click": "dunstctl set-paused toggle",
+        "on-click-right": "dunstctl history-clear",
+        "on-click-middle": "dunstctl history-pop"
     },
 
     "wireplumber": {
         "scroll-step": 5,
         "format": "󰕾 {volume}%",
-        "format-muted": "󰝟 muted",
+        "format-muted": "󰝟",
         "on-click": "pavucontrol",
         "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
         "tooltip-format": "{node_name}"
@@ -71,13 +89,15 @@
 
     "battery": {
         "states": {
-            "warning": 25,
+            "warning": 30,
             "critical": 15
         },
-        "format": "{icon}  {capacity}%",
-        "format-charging": "  {capacity}%",
-        "format-plugged": "  {capacity}%",
-        "format-alt": "{time}",
+        "format": "{icon} {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-full": " {capacity}%",
+        "format-alt": "{icon} {time}",
+        "tooltip-format": "{capacity}% {time}",
         "format-icons": ["", "", "", "", ""]
     },
 

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v btop >/dev/null 2>&1; then
+    notify-send "Waybar" "btop is not installed"
+    exit 1
+fi
+
+if command -v kitty >/dev/null 2>&1; then
+    exec kitty --class waybar-btop -e btop
+fi
+
+if command -v foot >/dev/null 2>&1; then
+    exec foot --app-id waybar-btop btop
+fi
+
+if command -v alacritty >/dev/null 2>&1; then
+    exec alacritty --class waybar-btop -e btop
+fi
+
+if command -v wezterm >/dev/null 2>&1; then
+    exec wezterm start --class waybar-btop -- btop
+fi
+
+if command -v xterm >/dev/null 2>&1; then
+    exec xterm -e btop
+fi
+
+notify-send "Waybar" "No supported terminal found to open btop"
+exit 1

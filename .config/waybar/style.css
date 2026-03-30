@@ -42,6 +42,7 @@ window#waybar {
 
 #custom-player,
 #custom-resources,
+#custom-notifications,
 #battery,
 #wireplumber,
 #clock,
@@ -70,6 +71,25 @@ window#waybar {
     padding-right: 10px;
 }
 
+#wireplumber {
+    min-width: 0;
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
+#battery {
+    min-width: 0;
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
+#custom-notifications {
+    min-width: 0;
+    min-height: 0;
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
 #custom-power:hover {
     background: rgba(210, 113, 126, 0.92);
 }
@@ -96,6 +116,20 @@ window#waybar {
 
 #wireplumber.muted {
     background: rgba(76, 76, 86, 0.95);
+}
+
+#custom-notifications.paused {
+    background: rgba(88, 74, 110, 0.95);
+    border-color: rgba(174, 146, 230, 0.8);
+}
+
+#custom-notifications.active {
+    background: rgba(69, 92, 124, 0.95);
+    border-color: rgba(145, 191, 245, 0.8);
+}
+
+#custom-notifications.idle {
+    background: rgba(32, 32, 38, 0.82);
 }
 
 #tray {

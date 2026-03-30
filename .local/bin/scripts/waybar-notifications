@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v dunstctl >/dev/null 2>&1; then
+    printf '{"text":"","tooltip":"dunstctl not found","class":"disabled"}\n'
+    exit 0
+fi
+
+displayed="$(dunstctl count displayed 2>/dev/null || printf "0")"
+waiting="$(dunstctl count waiting 2>/dev/null || printf "0")"
+history="$(dunstctl count history 2>/dev/null || printf "0")"
+paused="$(dunstctl is-paused 2>/dev/null || printf "false")"
+
+[[ "$displayed" =~ ^[0-9]+$ ]] || displayed=0
+[[ "$waiting" =~ ^[0-9]+$ ]] || waiting=0
+[[ "$history" =~ ^[0-9]+$ ]] || history=0
+[[ "$paused" == "true" || "$paused" == "false" ]] || paused="false"
+
+unread=$((displayed + waiting))
+
+if [[ "$paused" == "true" ]]; then
+    icon=""
+    class="paused"
+elif (( unread > 0 )); then
+    icon=""
+    class="active"
+else
+    icon=""
+    class="idle"
+fi
+
+if (( unread > 0 )); then
+    text="${icon} ${unread}"
+else
+    text="${icon}"
+fi
+
+tooltip="Notifications\nDisplayed: ${displayed}\nWaiting: ${waiting}\nHistory: ${history}\nLeft click: pause/resume\nMiddle click: pop history\nRight click: clear history"
+
+python - "$text" "$tooltip" "$class" <<'PY'
+import json
+import sys
+
+text, tooltip, css_class = sys.argv[1], sys.argv[2], sys.argv[3]
+print(json.dumps({"text": text, "tooltip": tooltip, "class": css_class}, ensure_ascii=False))
+PY
