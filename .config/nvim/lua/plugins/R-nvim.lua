@@ -19,16 +19,13 @@ if (requireNamespace("httpgd", quietly = TRUE)) {
   devs <- grDevices::dev.list()
   if (is.null(devs) || !any(names(devs) == "httpgd")) {
     httpgd::hgd(host = "127.0.0.1", port = %d, token = TRUE, silent = TRUE)
-    devs <- grDevices::dev.list()
   }
-  if (!is.null(devs) && any(names(devs) == "httpgd")) {
-    hgd_id <- unname(devs[which(names(devs) == "httpgd")[1]])
-    message("httpgd URL: ", httpgd::hgd_url(which = hgd_id))
-  }
+  url <- httpgd::hgd_url(host = "127.0.0.1", port = %d)
+  cat("\nhttpgd URL: ", url, "\n\n", sep = "")
 } else {
-  message("Install httpgd once with: install.packages('httpgd')")
+  cat("\nInstall httpgd once with: install.packages('httpgd')\n\n")
 }
-]=], httpgd_port))
+]=], httpgd_port, httpgd_port))
         end
 
         require('r').setup({
