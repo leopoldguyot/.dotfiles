@@ -14,11 +14,24 @@ return {
                 return
             end
 
-            local expr = string.format(
-                [=[if(requireNamespace("httpgd",quietly=TRUE)){d<-grDevices::dev.list();if(is.null(d)||!any(names(d)=="httpgd"))httpgd::hgd(host="127.0.0.1",port=%d,token=TRUE,silent=TRUE);cat("\nhttpgd URL: ",httpgd::hgd_url(host="127.0.0.1",port=%d),"\n\n",sep="")}else cat("\nInstall httpgd once with: install.packages('httpgd')\n\n")]=],
-                httpgd_port,
-                httpgd_port
-            )
+            local expr = string.format([=[
+local({
+  if (requireNamespace("httpgd", quietly = TRUE)) {
+    devs <- grDevices::dev.list()
+    if (is.null(devs) || !any(names(devs) == "httpgd")) {
+      httpgd::hgd(host = "127.0.0.1", port = %d, token = TRUE, silent = TRUE)
+    }
+    url <- httpgd::hgd_url(host = "127.0.0.1", port = %d)
+    msg <- paste0("require('r.log').inform('httpgd URL: ", gsub("'", "\\\\'", url), "')")
+    .C(nvimcom_msg_to_nvim, msg)
+  } else {
+    .C(
+      nvimcom_msg_to_nvim,
+      "require('r.log').warn(\"Install httpgd once with: install.packages('httpgd')\")"
+    )
+  }
+})
+]=], httpgd_port, httpgd_port)
             require('r.run').send_to_nvimcom("E", expr)
         end
 
