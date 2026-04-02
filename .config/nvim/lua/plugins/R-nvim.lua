@@ -7,9 +7,36 @@ return {
     -- like so:
     -- version = "~0.1.0",
     config = function()
+        local httpgd_port = tonumber(vim.env.R_HTTPGD_PORT) or 7878
+
+        local function start_httpgd_on_ssh()
+            if not vim.env.SSH_CONNECTION or vim.env.SSH_CONNECTION == "" then
+                return
+            end
+
+            require('r.send').cmd(string.format([=[
+if (requireNamespace("httpgd", quietly = TRUE)) {
+  devs <- grDevices::dev.list()
+  if (is.null(devs) || !any(names(devs) == "httpgd")) {
+    httpgd::hgd(host = "127.0.0.1", port = %d, token = TRUE, silent = TRUE)
+    devs <- grDevices::dev.list()
+  }
+  if (!is.null(devs) && any(names(devs) == "httpgd")) {
+    hgd_id <- unname(devs[which(names(devs) == "httpgd")[1]])
+    message("httpgd URL: ", httpgd::hgd_url(which = hgd_id))
+  }
+} else {
+  message("Install httpgd once with: install.packages('httpgd')")
+}
+]=], httpgd_port))
+        end
+
         require('r').setup({
             auto_quit = true,
             register_treesitter = false,
+            hook = {
+                after_R_start = start_httpgd_on_ssh,
+            },
         })
 
         -- Manual keymap for pipe operator and R code block
