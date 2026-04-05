@@ -12,16 +12,14 @@ MOUNTED_POINT=""
 
 usage() {
     cat <<EOF
-Usage: $PROGRAM_NAME [--list]
+Usage: $PROGRAM_NAME [--list] [--device /dev/sdXN]
 
-Interactive helper to:
-  1. Show removable/USB partitions that can be mounted
-  2. Mount a selected partition with udisksctl
-  3. Transfer files with rsync
+List and mount removable USB partitions.
 
 Options:
-  --list        List mountable partitions and exit
-  -h, --help    Show this help message
+  --list             List mountable removable USB partitions and exit
+  --device <path>    Mount the given block device directly
+  -h, --help         Show this help message
 EOF
 }
 
@@ -145,97 +143,25 @@ mount_device() {
 
     MOUNTED_DEVICE="$device"
     MOUNTED_POINT="$mountpoint"
-}
-
-unmount_device() {
-    local device="$1"
-    local parent disk
-
-    udisksctl unmount -b "$device"
-
-    parent="$(lsblk -no PKNAME "$device" 2>/dev/null | head -n1 || true)"
-    if [[ -n "$parent" ]]; then
-        disk="/dev/$parent"
-        if ! udisksctl power-off -b "$disk"; then
-            echo "Warning: could not power off $disk. You can still unplug after unmount." >&2
-        fi
-    fi
-}
-
-transfer_computer_to_usb() {
-    local source destination
-
-    read -erp "Source path on computer: " source
-    if [[ -z "$source" ]]; then
-        echo "Source path is required."
-        return 0
-    fi
-    if [[ ! -e "$source" ]]; then
-        echo "Path does not exist: $source" >&2
-        return 0
-    fi
-
-    read -erp "Destination directory on USB [${MOUNTED_POINT}/]: " destination
-    destination="${destination:-$MOUNTED_POINT/}"
-
-    mkdir -p "$destination"
-    rsync -avh --info=progress2 "$source" "$destination"
-}
-
-transfer_usb_to_computer() {
-    local source destination
-
-    read -erp "Source path on USB [${MOUNTED_POINT}/]: " source
-    source="${source:-$MOUNTED_POINT/}"
-    if [[ ! -e "$source" ]]; then
-        echo "Path does not exist: $source" >&2
-        return 0
-    fi
-
-    read -erp "Destination directory on computer [${PWD}/]: " destination
-    destination="${destination:-$PWD/}"
-
-    mkdir -p "$destination"
-    rsync -avh --info=progress2 "$source" "$destination"
-}
-
-transfer_menu() {
-    local choice
-
-    while true; do
-        cat <<EOF
-
-Mounted device: $MOUNTED_DEVICE
-Mountpoint: $MOUNTED_POINT
-
-1) Transfer computer -> USB
-2) Transfer USB -> computer
-3) Pick another partition
-4) Unmount and exit
-5) Exit (keep mounted)
-EOF
-        read -rp "Choose an option [1-5]: " choice
-
-        case "$choice" in
-            1) transfer_computer_to_usb ;;
-            2) transfer_usb_to_computer ;;
-            3) return 10 ;;
-            4)
-                unmount_device "$MOUNTED_DEVICE"
-                return 0
-                ;;
-            5) return 0 ;;
-            *) echo "Invalid option." ;;
-        esac
-    done
+    echo "Mounted $MOUNTED_DEVICE at $MOUNTED_POINT"
 }
 
 main() {
-    local list_only=0 arg selected_device menu_status
+    local list_only=0 selected_device="" arg
 
-    for arg in "$@"; do
+    while [[ $# -gt 0 ]]; do
+        arg="$1"
         case "$arg" in
             --list) list_only=1 ;;
+            --device)
+                shift
+                if [[ $# -eq 0 ]]; then
+                    echo "Missing value for --device" >&2
+                    usage >&2
+                    exit 1
+                fi
+                selected_device="$1"
+                ;;
             -h|--help)
                 usage
                 exit 0
@@ -246,44 +172,36 @@ main() {
                 exit 1
                 ;;
         esac
+        shift
     done
 
-    require_command "lsblk"
+    for cmd in lsblk findmnt udisksctl; do
+        require_command "$cmd"
+    done
 
+    if [[ -n "$selected_device" ]]; then
+        if [[ ! -b "$selected_device" ]]; then
+            echo "Block device not found: $selected_device" >&2
+            exit 1
+        fi
+        mount_device "$selected_device"
+        exit 0
+    fi
+
+    collect_candidates
     if [[ "$list_only" -eq 1 ]]; then
-        collect_candidates
         print_candidates
         exit $?
     fi
 
-    for cmd in udisksctl rsync findmnt; do
-        require_command "$cmd"
-    done
+    print_candidates || exit 1
 
-    while true; do
-        collect_candidates
-        print_candidates
+    if ! select_candidate; then
+        exit 0
+    fi
 
-        if ! select_candidate; then
-            exit 0
-        fi
-
-        selected_device="$(extract_field "$SELECTED_LINE" "NAME")"
-        mount_device "$selected_device"
-
-        echo "Ready to transfer files at: $MOUNTED_POINT"
-
-        if transfer_menu; then
-            exit 0
-        fi
-
-        menu_status=$?
-        if [[ "$menu_status" -eq 10 ]]; then
-            continue
-        fi
-
-        exit "$menu_status"
-    done
+    selected_device="$(extract_field "$SELECTED_LINE" "NAME")"
+    mount_device "$selected_device"
 }
 
 main "$@"

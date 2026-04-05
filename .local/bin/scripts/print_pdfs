@@ -8,20 +8,43 @@ DUPLEX_OPTION="two-sided-long-edge"
 DRY_RUN=false
 ROOT_DIR=""
 
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [--dry-run] <root_folder>
+
+Print PDF files found under <root_folder> when page count is <= $MAX_PAGES.
+EOF
+}
+
 # Parse arguments
-for arg in "$@"; do
-    case "$arg" in
+while [[ $# -gt 0 ]]; do
+    case "$1" in
         --dry-run)
             DRY_RUN=true
             ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 1
+            ;;
         *)
-            ROOT_DIR="$arg"
+            if [[ -n "$ROOT_DIR" ]]; then
+                echo "Only one root folder can be provided." >&2
+                usage >&2
+                exit 1
+            fi
+            ROOT_DIR="$1"
             ;;
     esac
+    shift
 done
 
 if [[ -z "$ROOT_DIR" ]]; then
-    echo "Usage: $0 [--dry-run] /path/to/root_folder"
+    usage >&2
     exit 1
 fi
 
@@ -64,4 +87,3 @@ done
 echo
 echo "Done."
 [[ "$DRY_RUN" == false ]] && echo "Printed $PRINTED PDFs"
-

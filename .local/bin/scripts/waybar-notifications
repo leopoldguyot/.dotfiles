@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+    cat <<EOF
+Usage: $(basename "$0")
+
+Print Waybar JSON for Dunst notification status.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
 if ! command -v dunstctl >/dev/null 2>&1; then
     printf '{"text":"","tooltip":"dunstctl not found","class":"disabled"}\n'
     exit 0

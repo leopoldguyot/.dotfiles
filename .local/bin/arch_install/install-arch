@@ -1,6 +1,28 @@
 #!/usr/bin/env bash
 set -e
 
+usage() {
+    cat <<'EOF'
+Usage: install-arch
+
+Run Arch setup modules from ~/.local/bin/arch_install/modules.
+EOF
+}
+
+if [[ $# -gt 0 ]]; then
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 1
+            ;;
+    esac
+fi
+
 ARCH_DIR="$HOME/.local/bin/arch_install"
 source $ARCH_DIR/lib/helpers.sh
 
@@ -12,4 +34,3 @@ for module in $ARCH_DIR/modules/*.sh; do
 done
 
 echo "[+] Done!"
-

@@ -13,6 +13,25 @@
 # 3. Update where you want to search:
 #    I'm using `fd` to perform the search inside a specific dir, you can use that or `find`
 
+usage() {
+    cat <<'EOF'
+Usage: zellij_sessionizer [directory]
+
+Open or attach a zellij session for a directory.
+Without an argument, prompts for a directory selection.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ $# -gt 1 ]]; then
+    usage >&2
+    exit 1
+fi
+
 # Use an argument if passed
 if [[ $# -eq 1 ]]; then
     selected_path=$1

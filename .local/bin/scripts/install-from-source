@@ -11,10 +11,24 @@ GH_SRC_DIR="${GH_SRC_DIR:-$HOME/.local/src}"
 LOCAL_BIN="${LOCAL_BIN:-$HOME/.local/bin}"
 CONFIG_FILE="${CONFIG_FILE:-$HOME/.config/source-tools.conf}"
 
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") <tool_name>
+
+Install or update one tool listed in:
+  $CONFIG_FILE
+EOF
+}
+
 mkdir -p "$GH_SRC_DIR" "$LOCAL_BIN"
 
-if [ $# -lt 1 ]; then
-    echo "Usage: $0 <tool_name>"
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ $# -ne 1 ]]; then
+    usage >&2
     exit 1
 fi
 
@@ -41,4 +55,3 @@ done < "$CONFIG_FILE"
 
 echo "❌ Tool $TOOL_NAME not found in config ($CONFIG_FILE)"
 exit 1
-

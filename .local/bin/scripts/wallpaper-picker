@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 
-WALLPAPER_DIR="$HOME/bg"
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [wallpaper_directory]
+
+Pick a wallpaper with wofi and apply it to all Hyprland monitors.
+Default directory: \$HOME/bg
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ "${1:-}" == -* ]]; then
+    echo "Unknown option: $1" >&2
+    usage >&2
+    exit 1
+fi
+
+if [[ $# -gt 1 ]]; then
+    usage >&2
+    exit 1
+fi
+
+WALLPAPER_DIR="${1:-$HOME/bg}"
 
 # launch picker
 SELECTED=$(ls "$WALLPAPER_DIR" | wofi --show dmenu --prompt "Wallpaper:")
@@ -16,4 +41,3 @@ for MON in $(hyprctl monitors | grep "Monitor" | awk '{print $2}')
 do
     hyprctl hyprpaper wallpaper "$MON,$FULLPATH"
 done
-

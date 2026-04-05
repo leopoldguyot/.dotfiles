@@ -26,6 +26,19 @@ declare -A LABEL_TO_INDEX=(
     ["eng"]="2"
 )
 
+usage() {
+    cat <<'EOF'
+Usage: keyboard-layout-switcher [fr|be|eng|next|apply-current]
+
+Without arguments, opens a wofi menu to pick a layout.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
 for required in hyprctl; do
     if ! command -v "$required" >/dev/null 2>&1; then
         echo "Missing required command: $required" >&2

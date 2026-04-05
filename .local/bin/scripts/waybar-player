@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+    cat <<EOF
+Usage: $(basename "$0")
+
+Print current media info for Waybar using playerctl.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
 max_len=22
 
 track="$(playerctl metadata --format '{{ artist }} - {{ title }}' 2>/dev/null || true)"

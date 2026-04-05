@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+    cat <<'EOF'
+Usage: sync-dotfiles
+
+Pull remote updates, stash/reapply local changes if needed,
+and re-stow dotfiles to home.
+EOF
+}
+
+if [[ $# -gt 0 ]]; then
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 1
+            ;;
+    esac
+fi
+
 # ======================
 # COLORS
 # ======================
@@ -100,4 +123,3 @@ stow -d ~/.dotfiles -t ~/ --verbose .
 echo -e "${GREEN}Dotfiles successfully synchronized and stowed!${NC}"
 echo
 echo -e "${BLUE}Backup of replaced files (if any):${NC} $BACKUP_DIR"
-

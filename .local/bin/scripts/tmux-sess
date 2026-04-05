@@ -1,5 +1,24 @@
 #!/usr/bin/env zsh
 
+usage() {
+    cat <<'EOF'
+Usage: tmux-sess [directory]
+
+Attach/create a tmux session for a selected directory.
+Without an argument, prompts for selection via fzf.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ $# -gt 1 ]]; then
+    usage >&2
+    exit 1
+fi
+
 if ! command -v tmux >/dev/null 2>&1; then
     echo "tmux is not installed. Please install tmux first."
     exit 1

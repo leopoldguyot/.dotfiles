@@ -1,0 +1,226 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PROGRAM_NAME="$(basename "$0")"
+LSBLK_FIELDS="NAME,TYPE,RM,SIZE,LABEL,MOUNTPOINT,TRAN"
+
+CANDIDATES=()
+SELECTED_LINE=""
+
+usage() {
+    cat <<EOF
+Usage: $PROGRAM_NAME [--list] [--device /dev/sdXN] [--power-off|--no-power-off]
+
+Unmount removable USB partitions.
+
+Options:
+  --list             List mounted removable USB partitions and exit
+  --device <path>    Unmount the given block device directly
+  --power-off        Also power off the parent USB disk after unmount
+  --no-power-off     Do not power off the parent USB disk (default)
+  -h, --help         Show this help message
+EOF
+}
+
+require_command() {
+    local cmd="$1"
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Missing required command: $cmd" >&2
+        exit 1
+    fi
+}
+
+run_with_timeout() {
+    local timeout_seconds="$1"
+    shift
+
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "$timeout_seconds" "$@"
+        return $?
+    fi
+
+    "$@"
+}
+
+extract_field() {
+    local line="$1"
+    local key="$2"
+    local value="${line#*${key}=\"}"
+
+    if [[ "$value" == "$line" ]]; then
+        echo ""
+        return
+    fi
+
+    echo "${value%%\"*}"
+}
+
+collect_mounted_candidates() {
+    local line type rm transport mountpoint
+    CANDIDATES=()
+
+    while IFS= read -r line; do
+        type="$(extract_field "$line" "TYPE")"
+        rm="$(extract_field "$line" "RM")"
+        transport="$(extract_field "$line" "TRAN")"
+        mountpoint="$(extract_field "$line" "MOUNTPOINT")"
+
+        if [[ "$type" == "part" && -n "$mountpoint" && ( "$rm" == "1" || "$transport" == "usb" ) ]]; then
+            CANDIDATES+=("$line")
+        fi
+    done < <(lsblk -p -P -o "$LSBLK_FIELDS")
+}
+
+print_candidates() {
+    local i line name size label mountpoint
+
+    if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
+        echo "No mounted removable USB partitions detected."
+        return 1
+    fi
+
+    printf "%-3s %-12s %-8s %-18s %s\n" \
+        "ID" "DEVICE" "SIZE" "LABEL" "MOUNTPOINT"
+
+    for i in "${!CANDIDATES[@]}"; do
+        line="${CANDIDATES[$i]}"
+        name="$(extract_field "$line" "NAME")"
+        size="$(extract_field "$line" "SIZE")"
+        label="$(extract_field "$line" "LABEL")"
+        mountpoint="$(extract_field "$line" "MOUNTPOINT")"
+
+        [[ -z "$label" ]] && label="-"
+
+        printf "%-3s %-12s %-8s %-18s %s\n" \
+            "$((i + 1))" "$name" "$size" "$label" "$mountpoint"
+    done
+}
+
+select_candidate() {
+    local choice
+
+    while true; do
+        read -rp "Select partition number (r=refresh, q=quit): " choice
+
+        case "$choice" in
+            [Qq]) return 1 ;;
+            [Rr])
+                collect_mounted_candidates
+                print_candidates || return 1
+                ;;
+            *)
+                if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#CANDIDATES[@]} )); then
+                    SELECTED_LINE="${CANDIDATES[$((choice - 1))]}"
+                    return 0
+                fi
+                echo "Invalid selection."
+                ;;
+        esac
+    done
+}
+
+unmount_device() {
+    local device="$1"
+    local power_off="$2"
+    local mountpoint parent disk status
+
+    mountpoint="$(findmnt -rn -S "$device" -o TARGET || true)"
+    if [[ -n "$mountpoint" ]]; then
+        if run_with_timeout 30 udisksctl unmount -b "$device"; then
+            echo "Unmounted $device"
+        else
+            status=$?
+            if [[ "$status" -eq 124 ]]; then
+                echo "Timed out while unmounting $device after 30s." >&2
+                echo "Try closing file explorers/apps using the drive, then retry." >&2
+            else
+                echo "Could not unmount $device." >&2
+            fi
+            return 1
+        fi
+    else
+        echo "$device is already unmounted."
+    fi
+
+    if [[ "$power_off" -eq 1 ]]; then
+        parent="$(lsblk -no PKNAME "$device" 2>/dev/null | head -n1 || true)"
+        if [[ -n "$parent" ]]; then
+            disk="/dev/$parent"
+            if run_with_timeout 15 udisksctl power-off -b "$disk"; then
+                echo "Powered off $disk"
+            else
+                status=$?
+                if [[ "$status" -eq 124 ]]; then
+                    echo "Warning: power-off timed out after 15s for $disk." >&2
+                else
+                    echo "Warning: could not power off $disk." >&2
+                fi
+                echo "It is still safe to unplug after unmount." >&2
+            fi
+        fi
+    fi
+}
+
+main() {
+    local list_only=0 selected_device="" power_off=0 arg
+
+    while [[ $# -gt 0 ]]; do
+        arg="$1"
+        case "$arg" in
+            --list) list_only=1 ;;
+            --device)
+                shift
+                if [[ $# -eq 0 ]]; then
+                    echo "Missing value for --device" >&2
+                    usage >&2
+                    exit 1
+                fi
+                selected_device="$1"
+                ;;
+            --power-off) power_off=1 ;;
+            --no-power-off) power_off=0 ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                echo "Unknown argument: $arg" >&2
+                usage >&2
+                exit 1
+                ;;
+        esac
+        shift
+    done
+
+    for cmd in lsblk findmnt udisksctl; do
+        require_command "$cmd"
+    done
+
+    if [[ "$list_only" -eq 1 ]]; then
+        collect_mounted_candidates
+        print_candidates
+        exit $?
+    fi
+
+    if [[ -n "$selected_device" ]]; then
+        if [[ ! -b "$selected_device" ]]; then
+            echo "Block device not found: $selected_device" >&2
+            exit 1
+        fi
+        unmount_device "$selected_device" "$power_off"
+        exit 0
+    fi
+
+    collect_mounted_candidates
+    print_candidates || exit 1
+
+    if ! select_candidate; then
+        exit 0
+    fi
+
+    selected_device="$(extract_field "$SELECTED_LINE" "NAME")"
+    unmount_device "$selected_device" "$power_off"
+}
+
+main "$@"

@@ -4,6 +4,24 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [hyprland_conf_path] [output_readme_path]
+
+Generate a keybind reference from Hyprland config and source files.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ $# -gt 2 ]]; then
+    usage >&2
+    exit 1
+fi
+
 DEFAULT_HYPR_CONF="$DOTFILES_DIR/.config/hypr/hyprland.conf"
 if [[ ! -f "$DEFAULT_HYPR_CONF" ]]; then
     DEFAULT_HYPR_CONF="$HOME/.config/hypr/hyprland.conf"

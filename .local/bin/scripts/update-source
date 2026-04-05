@@ -14,6 +14,25 @@ GH_SRC_DIR="${GH_SRC_DIR:-$HOME/.local/src}"
 LOCAL_BIN="${LOCAL_BIN:-$HOME/.local/bin}"
 CONFIG_FILE="${CONFIG_FILE:-$HOME/.config/source-tools.conf}"
 
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [tool_name]
+
+Update and rebuild tools listed in:
+  $CONFIG_FILE
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ $# -gt 1 ]]; then
+    usage >&2
+    exit 1
+fi
+
 mkdir -p "$GH_SRC_DIR" "$LOCAL_BIN"
 
 TARGET_TOOL="${1:-}"

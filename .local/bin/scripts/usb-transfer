@@ -1,0 +1,321 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PROGRAM_NAME="$(basename "$0")"
+LSBLK_FIELDS="NAME,TYPE,RM,SIZE,LABEL,MOUNTPOINT,TRAN"
+
+CANDIDATES=()
+SELECTED_LINE=""
+MOUNTED_DEVICE=""
+MOUNTED_POINT=""
+
+usage() {
+    cat <<EOF
+Usage: $PROGRAM_NAME [--device /dev/sdXN | --mountpoint /path]
+
+Transfer files with rsync between your computer and a mounted USB partition.
+When asked for a source path, press Enter (or type :fzf) to pick with fzf.
+
+Options:
+  --device <path>      Use an already-mounted device directly
+  --mountpoint <path>  Use a mountpoint directly
+  -h, --help           Show this help message
+EOF
+}
+
+require_command() {
+    local cmd="$1"
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Missing required command: $cmd" >&2
+        exit 1
+    fi
+}
+
+expand_user_path() {
+    local path="$1"
+    case "$path" in
+        "~")
+            printf '%s\n' "$HOME"
+            ;;
+        "~/"*)
+            printf '%s\n' "$HOME/${path#\~/}"
+            ;;
+        *)
+            printf '%s\n' "$path"
+            ;;
+    esac
+}
+
+pick_path_with_fzf() {
+    local root="$1"
+    local selection
+
+    if ! command -v fzf >/dev/null 2>&1; then
+        echo "fzf is not installed. Enter the path manually." >&2
+        return 1
+    fi
+
+    root="$(expand_user_path "$root")"
+    if [[ ! -d "$root" ]]; then
+        echo "Cannot browse paths in missing directory: $root" >&2
+        return 1
+    fi
+
+    selection="$(find "$root" -mindepth 1 2>/dev/null | fzf --prompt "Path > " --height 40% --reverse || true)"
+    if [[ -z "$selection" ]]; then
+        return 1
+    fi
+
+    printf '%s\n' "$selection"
+}
+
+prompt_source_path() {
+    local prompt="$1"
+    local browse_root="$2"
+    local default_path="${3:-}"
+    local source=""
+
+    read -erp "$prompt (Enter or :fzf to browse): " source
+    if [[ "$source" == ":fzf" ]]; then
+        source="$(pick_path_with_fzf "$browse_root" || true)"
+    elif [[ -z "$source" && -n "$default_path" ]]; then
+        source="$(expand_user_path "$default_path")"
+    elif [[ -z "$source" ]]; then
+        source="$(pick_path_with_fzf "$browse_root" || true)"
+    else
+        source="$(expand_user_path "$source")"
+    fi
+
+    if [[ -z "$source" ]]; then
+        echo "No source path selected."
+        return 1
+    fi
+
+    printf '%s\n' "$source"
+}
+
+extract_field() {
+    local line="$1"
+    local key="$2"
+    local value="${line#*${key}=\"}"
+
+    if [[ "$value" == "$line" ]]; then
+        echo ""
+        return
+    fi
+
+    echo "${value%%\"*}"
+}
+
+collect_mounted_candidates() {
+    local line type rm transport mountpoint
+    CANDIDATES=()
+
+    while IFS= read -r line; do
+        type="$(extract_field "$line" "TYPE")"
+        rm="$(extract_field "$line" "RM")"
+        transport="$(extract_field "$line" "TRAN")"
+        mountpoint="$(extract_field "$line" "MOUNTPOINT")"
+
+        if [[ "$type" == "part" && -n "$mountpoint" && ( "$rm" == "1" || "$transport" == "usb" ) ]]; then
+            CANDIDATES+=("$line")
+        fi
+    done < <(lsblk -p -P -o "$LSBLK_FIELDS")
+}
+
+print_candidates() {
+    local i line name size label mountpoint
+
+    if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
+        echo "No mounted removable USB partitions detected."
+        return 1
+    fi
+
+    printf "%-3s %-12s %-8s %-18s %s\n" \
+        "ID" "DEVICE" "SIZE" "LABEL" "MOUNTPOINT"
+
+    for i in "${!CANDIDATES[@]}"; do
+        line="${CANDIDATES[$i]}"
+        name="$(extract_field "$line" "NAME")"
+        size="$(extract_field "$line" "SIZE")"
+        label="$(extract_field "$line" "LABEL")"
+        mountpoint="$(extract_field "$line" "MOUNTPOINT")"
+
+        [[ -z "$label" ]] && label="-"
+
+        printf "%-3s %-12s %-8s %-18s %s\n" \
+            "$((i + 1))" "$name" "$size" "$label" "$mountpoint"
+    done
+}
+
+select_candidate() {
+    local choice
+
+    while true; do
+        read -rp "Select partition number (r=refresh, q=quit): " choice
+
+        case "$choice" in
+            [Qq]) return 1 ;;
+            [Rr])
+                collect_mounted_candidates
+                print_candidates || return 1
+                ;;
+            *)
+                if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#CANDIDATES[@]} )); then
+                    SELECTED_LINE="${CANDIDATES[$((choice - 1))]}"
+                    return 0
+                fi
+                echo "Invalid selection."
+                ;;
+        esac
+    done
+}
+
+transfer_computer_to_usb() {
+    local source destination
+
+    source="$(prompt_source_path "Source path on computer" "$HOME" || true)"
+    if [[ -z "$source" ]]; then
+        return 0
+    fi
+    if [[ ! -e "$source" ]]; then
+        echo "Path does not exist: $source" >&2
+        return 0
+    fi
+
+    read -erp "Destination directory on USB [${MOUNTED_POINT}/]: " destination
+    destination="${destination:-$MOUNTED_POINT/}"
+    destination="$(expand_user_path "$destination")"
+
+    mkdir -p "$destination"
+    rsync -avh --info=progress2 "$source" "$destination"
+}
+
+transfer_usb_to_computer() {
+    local source destination
+
+    source="$(prompt_source_path "Source path on USB [${MOUNTED_POINT}/]" "$MOUNTED_POINT" "$MOUNTED_POINT/" || true)"
+    if [[ -z "$source" ]]; then
+        return 0
+    fi
+    if [[ ! -e "$source" ]]; then
+        echo "Path does not exist: $source" >&2
+        return 0
+    fi
+
+    read -erp "Destination directory on computer [${PWD}/]: " destination
+    destination="${destination:-$PWD/}"
+    destination="$(expand_user_path "$destination")"
+
+    mkdir -p "$destination"
+    rsync -avh --info=progress2 "$source" "$destination"
+}
+
+transfer_menu() {
+    local choice
+
+    while true; do
+        cat <<EOF
+
+Using mounted USB:
+  Device: $MOUNTED_DEVICE
+  Mountpoint: $MOUNTED_POINT
+
+1) Transfer computer -> USB
+2) Transfer USB -> computer
+q) Quit
+EOF
+        read -rp "Choose an option [1/2/q]: " choice
+
+        case "$choice" in
+            1) transfer_computer_to_usb ;;
+            2) transfer_usb_to_computer ;;
+            [Qq]) return 0 ;;
+            *) echo "Invalid option." ;;
+        esac
+    done
+}
+
+main() {
+    local selected_device="" selected_mountpoint="" arg
+
+    while [[ $# -gt 0 ]]; do
+        arg="$1"
+        case "$arg" in
+            --device)
+                shift
+                if [[ $# -eq 0 ]]; then
+                    echo "Missing value for --device" >&2
+                    usage >&2
+                    exit 1
+                fi
+                selected_device="$1"
+                ;;
+            --mountpoint)
+                shift
+                if [[ $# -eq 0 ]]; then
+                    echo "Missing value for --mountpoint" >&2
+                    usage >&2
+                    exit 1
+                fi
+                selected_mountpoint="$1"
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                echo "Unknown argument: $arg" >&2
+                usage >&2
+                exit 1
+                ;;
+        esac
+        shift
+    done
+
+    if [[ -n "$selected_device" && -n "$selected_mountpoint" ]]; then
+        echo "Use either --device or --mountpoint, not both." >&2
+        exit 1
+    fi
+
+    for cmd in lsblk findmnt rsync; do
+        require_command "$cmd"
+    done
+
+    if [[ -n "$selected_mountpoint" ]]; then
+        selected_mountpoint="$(expand_user_path "$selected_mountpoint")"
+        MOUNTED_POINT="$(findmnt -rn -T "$selected_mountpoint" -o TARGET || true)"
+        if [[ -z "$MOUNTED_POINT" ]]; then
+            echo "Not a mounted path: $selected_mountpoint" >&2
+            exit 1
+        fi
+        MOUNTED_DEVICE="$(findmnt -rn -T "$MOUNTED_POINT" -o SOURCE || true)"
+        [[ -z "$MOUNTED_DEVICE" ]] && MOUNTED_DEVICE="unknown"
+    elif [[ -n "$selected_device" ]]; then
+        if [[ ! -b "$selected_device" ]]; then
+            echo "Block device not found: $selected_device" >&2
+            exit 1
+        fi
+        MOUNTED_POINT="$(findmnt -rn -S "$selected_device" -o TARGET || true)"
+        if [[ -z "$MOUNTED_POINT" ]]; then
+            echo "$selected_device is not mounted. Mount it first with usb-mount." >&2
+            exit 1
+        fi
+        MOUNTED_DEVICE="$selected_device"
+    else
+        collect_mounted_candidates
+        print_candidates || exit 1
+
+        if ! select_candidate; then
+            exit 0
+        fi
+
+        MOUNTED_DEVICE="$(extract_field "$SELECTED_LINE" "NAME")"
+        MOUNTED_POINT="$(extract_field "$SELECTED_LINE" "MOUNTPOINT")"
+    fi
+
+    transfer_menu
+}
+
+main "$@"
