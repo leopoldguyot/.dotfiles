@@ -44,6 +44,20 @@ To add new tools, simply append to source-tools.conf:
 fd | https://github.com/sharkdp/fd.git | cargo build --release && cp target/release/fd ~/.local/bin/
 ```
 
+# USB mount and transfer helper
+
+Use the helper script below to list removable partitions, mount one, and transfer files with `rsync`:
+
+``` console
+usb-media
+```
+
+List-only mode:
+
+``` console
+usb-media --list
+```
+
 # Paths
 
 | Path                          | Purpose                                     |
@@ -55,5 +69,4 @@ fd | https://github.com/sharkdp/fd.git | cargo build --release && cp target/rele
 | `~/.config/source-tools.conf` | Tool definitions for builds from source     |
 | `~/.oh-my-zsh-custom`         | Oh My Zsh directory                         |
 | `~/.fonts`                    | Custom fonts                                |
-
 

@@ -1,0 +1,289 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PROGRAM_NAME="$(basename "$0")"
+LSBLK_FIELDS="NAME,TYPE,RM,SIZE,FSTYPE,LABEL,MOUNTPOINT,TRAN"
+
+CANDIDATES=()
+SELECTED_LINE=""
+MOUNTED_DEVICE=""
+MOUNTED_POINT=""
+
+usage() {
+    cat <<EOF
+Usage: $PROGRAM_NAME [--list]
+
+Interactive helper to:
+  1. Show removable/USB partitions that can be mounted
+  2. Mount a selected partition with udisksctl
+  3. Transfer files with rsync
+
+Options:
+  --list        List mountable partitions and exit
+  -h, --help    Show this help message
+EOF
+}
+
+require_command() {
+    local cmd="$1"
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Missing required command: $cmd" >&2
+        exit 1
+    fi
+}
+
+extract_field() {
+    local line="$1"
+    local key="$2"
+    local value="${line#*${key}=\"}"
+
+    if [[ "$value" == "$line" ]]; then
+        echo ""
+        return
+    fi
+
+    echo "${value%%\"*}"
+}
+
+collect_candidates() {
+    local line type rm transport
+    CANDIDATES=()
+
+    while IFS= read -r line; do
+        type="$(extract_field "$line" "TYPE")"
+        rm="$(extract_field "$line" "RM")"
+        transport="$(extract_field "$line" "TRAN")"
+
+        if [[ "$type" == "part" && ( "$rm" == "1" || "$transport" == "usb" ) ]]; then
+            CANDIDATES+=("$line")
+        fi
+    done < <(lsblk -p -P -o "$LSBLK_FIELDS")
+}
+
+print_candidates() {
+    local i line name size fs label mountpoint state
+
+    if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
+        echo "No removable USB partitions detected."
+        return 1
+    fi
+
+    printf "%-3s %-12s %-8s %-8s %-18s %-10s %s\n" \
+        "ID" "DEVICE" "SIZE" "FS" "LABEL" "STATE" "MOUNTPOINT"
+
+    for i in "${!CANDIDATES[@]}"; do
+        line="${CANDIDATES[$i]}"
+        name="$(extract_field "$line" "NAME")"
+        size="$(extract_field "$line" "SIZE")"
+        fs="$(extract_field "$line" "FSTYPE")"
+        label="$(extract_field "$line" "LABEL")"
+        mountpoint="$(extract_field "$line" "MOUNTPOINT")"
+
+        [[ -z "$fs" ]] && fs="-"
+        [[ -z "$label" ]] && label="-"
+
+        if [[ -n "$mountpoint" ]]; then
+            state="mounted"
+        else
+            state="unmounted"
+            mountpoint="-"
+        fi
+
+        printf "%-3s %-12s %-8s %-8s %-18s %-10s %s\n" \
+            "$((i + 1))" "$name" "$size" "$fs" "$label" "$state" "$mountpoint"
+    done
+}
+
+select_candidate() {
+    local choice
+
+    while true; do
+        read -rp "Select partition number (r=refresh, q=quit): " choice
+
+        case "$choice" in
+            [Qq]) return 1 ;;
+            [Rr])
+                collect_candidates
+                print_candidates || return 1
+                ;;
+            *)
+                if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#CANDIDATES[@]} )); then
+                    SELECTED_LINE="${CANDIDATES[$((choice - 1))]}"
+                    return 0
+                fi
+                echo "Invalid selection."
+                ;;
+        esac
+    done
+}
+
+mount_device() {
+    local device="$1"
+    local output mountpoint
+
+    mountpoint="$(findmnt -rn -S "$device" -o TARGET || true)"
+    if [[ -n "$mountpoint" ]]; then
+        echo "$device is already mounted at $mountpoint"
+        MOUNTED_DEVICE="$device"
+        MOUNTED_POINT="$mountpoint"
+        return 0
+    fi
+
+    output="$(udisksctl mount -b "$device")"
+    echo "$output"
+
+    mountpoint="$(printf '%s\n' "$output" | sed -n 's/.* at \(.*\)\.$/\1/p' | head -n1)"
+    if [[ -z "$mountpoint" ]]; then
+        mountpoint="$(findmnt -rn -S "$device" -o TARGET || true)"
+    fi
+
+    if [[ -z "$mountpoint" ]]; then
+        echo "Could not determine mountpoint for $device." >&2
+        return 1
+    fi
+
+    MOUNTED_DEVICE="$device"
+    MOUNTED_POINT="$mountpoint"
+}
+
+unmount_device() {
+    local device="$1"
+    local parent disk
+
+    udisksctl unmount -b "$device"
+
+    parent="$(lsblk -no PKNAME "$device" 2>/dev/null | head -n1 || true)"
+    if [[ -n "$parent" ]]; then
+        disk="/dev/$parent"
+        if ! udisksctl power-off -b "$disk"; then
+            echo "Warning: could not power off $disk. You can still unplug after unmount." >&2
+        fi
+    fi
+}
+
+transfer_computer_to_usb() {
+    local source destination
+
+    read -erp "Source path on computer: " source
+    if [[ -z "$source" ]]; then
+        echo "Source path is required."
+        return 0
+    fi
+    if [[ ! -e "$source" ]]; then
+        echo "Path does not exist: $source" >&2
+        return 0
+    fi
+
+    read -erp "Destination directory on USB [${MOUNTED_POINT}/]: " destination
+    destination="${destination:-$MOUNTED_POINT/}"
+
+    mkdir -p "$destination"
+    rsync -avh --info=progress2 "$source" "$destination"
+}
+
+transfer_usb_to_computer() {
+    local source destination
+
+    read -erp "Source path on USB [${MOUNTED_POINT}/]: " source
+    source="${source:-$MOUNTED_POINT/}"
+    if [[ ! -e "$source" ]]; then
+        echo "Path does not exist: $source" >&2
+        return 0
+    fi
+
+    read -erp "Destination directory on computer [${PWD}/]: " destination
+    destination="${destination:-$PWD/}"
+
+    mkdir -p "$destination"
+    rsync -avh --info=progress2 "$source" "$destination"
+}
+
+transfer_menu() {
+    local choice
+
+    while true; do
+        cat <<EOF
+
+Mounted device: $MOUNTED_DEVICE
+Mountpoint: $MOUNTED_POINT
+
+1) Transfer computer -> USB
+2) Transfer USB -> computer
+3) Pick another partition
+4) Unmount and exit
+5) Exit (keep mounted)
+EOF
+        read -rp "Choose an option [1-5]: " choice
+
+        case "$choice" in
+            1) transfer_computer_to_usb ;;
+            2) transfer_usb_to_computer ;;
+            3) return 10 ;;
+            4)
+                unmount_device "$MOUNTED_DEVICE"
+                return 0
+                ;;
+            5) return 0 ;;
+            *) echo "Invalid option." ;;
+        esac
+    done
+}
+
+main() {
+    local list_only=0 arg selected_device menu_status
+
+    for arg in "$@"; do
+        case "$arg" in
+            --list) list_only=1 ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                echo "Unknown argument: $arg" >&2
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    require_command "lsblk"
+
+    if [[ "$list_only" -eq 1 ]]; then
+        collect_candidates
+        print_candidates
+        exit $?
+    fi
+
+    for cmd in udisksctl rsync findmnt; do
+        require_command "$cmd"
+    done
+
+    while true; do
+        collect_candidates
+        print_candidates
+
+        if ! select_candidate; then
+            exit 0
+        fi
+
+        selected_device="$(extract_field "$SELECTED_LINE" "NAME")"
+        mount_device "$selected_device"
+
+        echo "Ready to transfer files at: $MOUNTED_POINT"
+
+        if transfer_menu; then
+            exit 0
+        fi
+
+        menu_status=$?
+        if [[ "$menu_status" -eq 10 ]]; then
+            continue
+        fi
+
+        exit "$menu_status"
+    done
+}
+
+main "$@"

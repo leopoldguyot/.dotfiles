@@ -23,3 +23,6 @@ deezer
 ## Divers
 
 zotero
+
+via-bin
+zmk-studio

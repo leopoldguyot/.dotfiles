@@ -14,6 +14,34 @@ return {
                 return
             end
 
+            local function copy_to_system_clipboard(text)
+                local ok = pcall(vim.fn.setreg, '+', text)
+                if ok then
+                    return true
+                end
+
+                if vim.fn.executable('wl-copy') == 1 then
+                    vim.system({ 'wl-copy' }, { stdin = text })
+                    return true
+                end
+                if vim.fn.executable('xclip') == 1 then
+                    vim.system({ 'xclip', '-selection', 'clipboard' }, { stdin = text })
+                    return true
+                end
+                if vim.fn.executable('xsel') == 1 then
+                    vim.system({ 'xsel', '--clipboard', '--input' }, { stdin = text })
+                    return true
+                end
+                return false
+            end
+
+            local url = string.format("http://127.0.0.1:%d", httpgd_port)
+            if copy_to_system_clipboard(url) then
+                vim.notify("Copied httpgd URL to system clipboard: " .. url, vim.log.levels.INFO, { title = "R.nvim" })
+            else
+                vim.notify("Could not copy httpgd URL to system clipboard", vim.log.levels.WARN, { title = "R.nvim" })
+            end
+
             require('r.send').cmd(string.format([=[
 if (requireNamespace("httpgd", quietly = TRUE)) {
   devs <- grDevices::dev.list()

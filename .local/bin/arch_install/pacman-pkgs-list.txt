@@ -19,6 +19,7 @@ protobuf
 python-pipx
 python-pip
 hdf5
+hyprpolkitagent
 
 ## base
 git
