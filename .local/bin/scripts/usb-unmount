@@ -31,18 +31,6 @@ require_command() {
     fi
 }
 
-run_with_timeout() {
-    local timeout_seconds="$1"
-    shift
-
-    if command -v timeout >/dev/null 2>&1; then
-        timeout "$timeout_seconds" "$@"
-        return $?
-    fi
-
-    "$@"
-}
-
 extract_field() {
     local line="$1"
     local key="$2"
@@ -127,16 +115,18 @@ unmount_device() {
 
     mountpoint="$(findmnt -rn -S "$device" -o TARGET || true)"
     if [[ -n "$mountpoint" ]]; then
-        if run_with_timeout 30 udisksctl unmount -b "$device"; then
+        if command -v sync >/dev/null 2>&1; then
+            echo "Flushing pending writes for $device..."
+            sync -f "$mountpoint" 2>/dev/null || sync
+        fi
+
+        echo "Unmounting $device..."
+        if udisksctl unmount -b "$device"; then
             echo "Unmounted $device"
         else
             status=$?
-            if [[ "$status" -eq 124 ]]; then
-                echo "Timed out while unmounting $device after 30s." >&2
-                echo "Try closing file explorers/apps using the drive, then retry." >&2
-            else
-                echo "Could not unmount $device." >&2
-            fi
+            echo "Could not unmount $device." >&2
+            echo "Close apps using the drive (file manager, terminal, media indexer) and retry." >&2
             return 1
         fi
     else
@@ -147,12 +137,25 @@ unmount_device() {
         parent="$(lsblk -no PKNAME "$device" 2>/dev/null | head -n1 || true)"
         if [[ -n "$parent" ]]; then
             disk="/dev/$parent"
-            if run_with_timeout 15 udisksctl power-off -b "$disk"; then
+            if command -v timeout >/dev/null 2>&1; then
+                if timeout 30 udisksctl power-off -b "$disk"; then
+                    status=0
+                else
+                    status=$?
+                fi
+            else
+                if udisksctl power-off -b "$disk"; then
+                    status=0
+                else
+                    status=$?
+                fi
+            fi
+
+            if [[ "$status" -eq 0 ]]; then
                 echo "Powered off $disk"
             else
-                status=$?
                 if [[ "$status" -eq 124 ]]; then
-                    echo "Warning: power-off timed out after 15s for $disk." >&2
+                    echo "Warning: power-off timed out after 30s for $disk." >&2
                 else
                     echo "Warning: could not power off $disk." >&2
                 fi

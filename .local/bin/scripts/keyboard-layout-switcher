@@ -11,24 +11,24 @@ ACTIVE_FILE="$KEYBINDS_DIR/layout-active.conf"
 declare -A LABEL_TO_LAYOUT=(
     ["fr"]="fr"
     ["be"]="be"
-    ["eng"]="us"
+    ["us"]="us"
 )
 
 declare -A LABEL_TO_BIND_FILE=(
     ["fr"]="layout-fr.conf"
     ["be"]="layout-be.conf"
-    ["eng"]="layout-eng.conf"
+    ["us"]="layout-eng.conf"
 )
 
 declare -A LABEL_TO_INDEX=(
     ["fr"]="0"
     ["be"]="1"
-    ["eng"]="2"
+    ["us"]="2"
 )
 
 usage() {
     cat <<'EOF'
-Usage: keyboard-layout-switcher [fr|be|eng|next|apply-current]
+Usage: keyboard-layout-switcher [fr|be|us|next|apply-current]
 
 Without arguments, opens a wofi menu to pick a layout.
 EOF
@@ -56,7 +56,7 @@ if [[ -f "$ACTIVE_FILE" ]]; then
     if grep -q 'layout-be\.conf' "$ACTIVE_FILE"; then
         current_label="be"
     elif grep -q 'layout-eng\.conf' "$ACTIVE_FILE"; then
-        current_label="eng"
+        current_label="us"
     fi
 fi
 
@@ -66,8 +66,8 @@ if [[ -n "$requested" ]]; then
     if [[ "$requested" == "next" ]]; then
         case "$current_label" in
             fr) SELECTED="be" ;;
-            be) SELECTED="eng" ;;
-            eng) SELECTED="fr" ;;
+            be) SELECTED="us" ;;
+            us) SELECTED="fr" ;;
         esac
     elif [[ "$requested" == "apply-current" ]]; then
         SELECTED="$current_label"
@@ -80,8 +80,13 @@ else
         echo "Missing required command for menu mode: wofi" >&2
         exit 1
     fi
-    SELECTED="$(printf '%s\n' fr be eng | wofi --show dmenu --prompt 'Keyboard layout:')"
+    SELECTED="$(printf '%s\n' fr be us | wofi --show dmenu --prompt 'Keyboard layout:')"
     [[ -z "${SELECTED:-}" ]] && exit 0
+fi
+
+# Backward-compatible alias.
+if [[ "$SELECTED" == "eng" ]]; then
+    SELECTED="us"
 fi
 
 if [[ -z "${LABEL_TO_LAYOUT[$SELECTED]:-}" ]]; then
