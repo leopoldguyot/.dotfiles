@@ -20,6 +20,7 @@ Local leader is `\` (default).
 | Normal | `<leader>gr` | Find references |
 | Normal | `<leader>ca` | Code actions |
 | Normal | `<leader>gf` | Format current buffer |
+| Normal | `<leader>qp` | Open Quarto preview |
 | Normal | `<leader>dh` | Hide diagnostics |
 | Normal | `<leader>ds` | Show diagnostics |
 | Normal | `<leader>/` | Toggle current line comment |
@@ -37,5 +38,6 @@ Local leader is `\` (default).
 ## Notes
 
 - `lazygit` binary must be installed for `<leader>gg`.
+- `quarto` CLI must be installed for `<leader>qp` preview.
 - Formatting is manual via `<leader>gf` (format on save is disabled).
 - R mappings are only active in `r`, `rmd`, and `quarto` filetypes.
