@@ -64,16 +64,11 @@ if (requireNamespace("httpgd", quietly = TRUE)) {
             },
         })
 
-        -- Manual keymap for pipe operator and R code block
+        -- Manual keymaps for common R operators and code block
         vim.api.nvim_create_autocmd("FileType", {
             pattern = { "r", "rmd", "quarto" },
             callback = function()
-                -- Pipe operator keymap
-                vim.keymap.set('i', '<C-S-m>', ' |> ', { buffer = true, desc = "Insert pipe operator" })
-
-                -- R code block keymap using LocalLeader (backslash by default)
-                -- Note: R.nvim already has <M-r> (Alt+r) in insert mode for this
-                vim.keymap.set('n', '<LocalLeader>kc', function()
+                local function insert_r_chunk()
                     local line = vim.api.nvim_win_get_cursor(0)[1]
                     vim.api.nvim_buf_set_lines(0, line - 1, line - 1, false, {
                         '```{r}',
@@ -82,7 +77,22 @@ if (requireNamespace("httpgd", quietly = TRUE)) {
                     })
                     vim.api.nvim_win_set_cursor(0, {line + 1, 0})
                     vim.cmd('startinsert!')
-                end, { buffer = true, desc = "Insert R code block" })
+                end
+
+                -- Pipe operator keymaps
+                vim.keymap.set('i', '<C-S-m>', ' |> ', { buffer = true, desc = "Insert pipe operator" })
+                vim.keymap.set('i', '<M-p>', ' |> ', { buffer = true, desc = "Insert pipe operator" })
+
+                -- Assignment operator keymap
+                vim.keymap.set('i', '<M-->', ' <- ', { buffer = true, desc = "Insert assignment operator" })
+
+                -- R code block keymap using LocalLeader (backslash by default)
+                -- Note: R.nvim already has <M-r> (Alt+r) in insert mode for this
+                vim.keymap.set('n', '<LocalLeader>kc', insert_r_chunk, { buffer = true, desc = "Insert R code block" })
+
+                if vim.bo.filetype == "rmd" or vim.bo.filetype == "quarto" then
+                    vim.keymap.set({ 'n', 'i' }, '<M-c>', insert_r_chunk, { buffer = true, desc = "Insert Rmd chunk" })
+                end
             end,
         })
     end

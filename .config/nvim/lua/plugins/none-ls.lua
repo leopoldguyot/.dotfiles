@@ -44,16 +44,6 @@ close(con)]],
 			end,
 		})
 
-		local format_on_save_enabled = true
-		local format_on_save_timeout_ms = 3000
-		local format_on_save_filetypes = {
-			lua = true,
-			r = true,
-			rmd = true,
-			quarto = true,
-			tex = true,
-		}
-
 		null_ls.setup({
 			sources = {
 				formatting.stylua,
@@ -61,26 +51,8 @@ close(con)]],
 			},
 		})
 
-		vim.api.nvim_create_autocmd("BufWritePre", {
-			group = vim.api.nvim_create_augroup("LspFormatOnSave", { clear = true }),
-			callback = function(args)
-				if not format_on_save_enabled then
-					return
-				end
-
-				local bufnr = args.buf
-				local ft = vim.bo[bufnr].filetype
-				if not format_on_save_filetypes[ft] then
-					return
-				end
-
-				vim.lsp.buf.format({
-					bufnr = bufnr,
-					timeout_ms = format_on_save_timeout_ms,
-				})
-			end,
-		})
-
-		vim.keymap.set("n", "<leader>gf", vim.lsp.buf.format, {desc = "format buffer"})
+		vim.keymap.set("n", "<leader>gf", function()
+			vim.lsp.buf.format({ timeout_ms = 3000 })
+		end, { desc = "format buffer" })
 	end,
 }

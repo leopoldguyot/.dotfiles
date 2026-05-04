@@ -28,11 +28,14 @@ Local leader is `\` (default).
 | Insert | `<C-Space>` | Trigger completion |
 | Insert | `<C-e>` | Abort completion |
 | Insert | `<Tab>` / `<CR>` | Confirm completion |
-| Insert (R/Rmd/Quarto) | `<C-S-m>` | Insert `|>` |
+| Insert (R/Rmd/Quarto) | `<C-S-m>` / `<M-p>` | Insert `|>` |
+| Insert (R/Rmd/Quarto) | `<M-->` | Insert `<-` |
 | Normal (R/Rmd/Quarto) | `<LocalLeader>kc` | Insert fenced R chunk |
+| Normal / Insert (Rmd/Quarto) | `<M-c>` | Insert fenced R chunk |
 | Normal / Terminal | `<C-h/j/k/l>` | Move across Neovim splits and tmux/zellij panes |
 
 ## Notes
 
 - `lazygit` binary must be installed for `<leader>gg`.
+- Formatting is manual via `<leader>gf` (format on save is disabled).
 - R mappings are only active in `r`, `rmd`, and `quarto` filetypes.

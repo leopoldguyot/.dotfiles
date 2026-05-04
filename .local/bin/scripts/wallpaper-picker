@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 usage() {
     cat <<EOF
 Usage: $(basename "$0") [wallpaper_directory]
@@ -26,18 +28,60 @@ if [[ $# -gt 1 ]]; then
 fi
 
 WALLPAPER_DIR="${1:-$HOME/bg}"
+WALLPAPER_DIR="$(readlink -f "$WALLPAPER_DIR" 2>/dev/null || printf "%s" "$WALLPAPER_DIR")"
+if [[ ! -d "$WALLPAPER_DIR" ]]; then
+    echo "Wallpaper directory not found: $WALLPAPER_DIR" >&2
+    exit 1
+fi
 
-# launch picker
-SELECTED=$(ls "$WALLPAPER_DIR" | wofi --show dmenu --prompt "Wallpaper:")
-[ -z "$SELECTED" ] && exit
+if ! command -v hyprctl >/dev/null 2>&1; then
+    echo "hyprctl is required but not found in PATH." >&2
+    exit 1
+fi
 
+if ! command -v wofi >/dev/null 2>&1; then
+    echo "wofi is required but not found in PATH." >&2
+    exit 1
+fi
+
+mapfile -t WALLPAPERS < <(
+    find "$WALLPAPER_DIR" -maxdepth 1 -type f \
+        \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" -o -iname "*.bmp" -o -iname "*.gif" \) \
+        -printf "%f\n" | sort -f
+)
+
+if [[ ${#WALLPAPERS[@]} -eq 0 ]]; then
+    echo "No wallpapers found in: $WALLPAPER_DIR" >&2
+    exit 1
+fi
+
+SELECTED="${WALLPAPER_PICKER_SELECTED:-}"
+if [[ -z "$SELECTED" ]]; then
+    SELECTED="$(printf "%s\n" "${WALLPAPERS[@]}" | wofi --show dmenu --prompt "Wallpaper:")"
+fi
+
+[[ -z "$SELECTED" ]] && exit 0
 FULLPATH="$WALLPAPER_DIR/$SELECTED"
 
-# preload image
-hyprctl hyprpaper preload "$FULLPATH"
+if [[ ! -f "$FULLPATH" ]]; then
+    echo "Selected wallpaper does not exist: $FULLPATH" >&2
+    exit 1
+fi
 
-# set wallpaper on all monitors
-for MON in $(hyprctl monitors | grep "Monitor" | awk '{print $2}')
-do
-    hyprctl hyprpaper wallpaper "$MON,$FULLPATH"
+if command -v jq >/dev/null 2>&1; then
+    mapfile -t MONITORS < <(hyprctl -j monitors | jq -r '.[].name')
+else
+    mapfile -t MONITORS < <(hyprctl monitors | awk '/^Monitor / {print $2}')
+fi
+if [[ ${#MONITORS[@]} -eq 0 ]]; then
+    echo "No active monitors reported by hyprctl." >&2
+    exit 1
+fi
+
+# hyprpaper IPC changed: wallpaper is set directly with [monitor],[path],[fit_mode].
+for MON in "${MONITORS[@]}"; do
+    hyprctl hyprpaper wallpaper "$MON,$FULLPATH,cover" >/dev/null
 done
+
+# Also update fallback wallpaper for future monitor hotplug events.
+hyprctl hyprpaper wallpaper ",$FULLPATH,cover" >/dev/null
