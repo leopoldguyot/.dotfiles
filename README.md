@@ -38,6 +38,7 @@ All scripts in `~/.local/bin/scripts` support `--help`.
 | Path | Purpose |
 | --- | --- |
 | `.config/` | App configs (nvim, tmux, hypr, waybar, etc.) |
+| `.codex/` | Codex CLI config tracked in dotfiles |
 | `.local/bin/scripts/` | User-facing helper scripts |
 | `.local/bin/arch_install/` | Arch-specific install/update flow |
 | `keyboard_layouts/` | Keyboard layout assets |

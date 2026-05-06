@@ -95,14 +95,20 @@ echo -e "${BLUE}Checking for existing files that may block stow...${NC}"
 BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y-%m-%d_%H-%M-%S)"
 mkdir -p "$BACKUP_DIR"
 
-# Get a list of files stow would manage (by dry-run)
-STOW_CONFLICTS=$(stow -d ~/.dotfiles -t ~/ --no --verbose 2>&1 | grep -E 'existing target is not a link' || true)
+# Get a list of files the real stow command would manage (by dry-run).
+STOW_CONFLICTS=$(stow -d ~/.dotfiles -t ~/ --no --verbose . 2>&1 | grep -E 'existing target is not a link|cannot stow .* over existing target .* since neither a link nor a directory' || true)
 
 if [ -n "$STOW_CONFLICTS" ]; then
     echo -e "${YELLOW}Found existing files that conflict with stow. Backing them up...${NC}"
     echo "$STOW_CONFLICTS" | while read -r line; do
-        # Extract path like `/home/user/.bashrc`
-        path=$(echo "$line" | sed -E 's/.*existing target is not a link: //')
+        # Extract the conflicting target path from either stow message format.
+        path=$(echo "$line" | sed -nE 's/.*existing target is not a link: (.*)/\1/p')
+        if [ -z "$path" ]; then
+            path=$(echo "$line" | sed -nE 's/.* over existing target ([^ ]+) since neither a link nor a directory.*/\1/p')
+            if [ -n "$path" ]; then
+                path="$HOME/$path"
+            fi
+        fi
         [ -f "$path" ] || [ -d "$path" ] || continue
         rel=$(basename "$path")
         echo -e "  Moving ${BLUE}$path${NC} -> ${YELLOW}$BACKUP_DIR/$rel${NC}"
