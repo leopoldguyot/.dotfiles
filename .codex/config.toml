@@ -1,5 +1,5 @@
-model = "gpt-5.4"
-model_reasoning_effort = "medium"
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
 approval_policy = "on-request"
 approvals_reviewer = "user"
 sandbox_mode = "read-only"
@@ -8,6 +8,15 @@ sandbox_mode = "read-only"
 trust_level = "trusted"
 
 [projects."/home/leopoldguyot"]
+trust_level = "trusted"
+
+[projects."/home/leopoldguyot/.dotfiles"]
+trust_level = "trusted"
+
+[projects."/home/leopoldguyot/dev/downstreamSCP"]
+trust_level = "trusted"
+
+[projects."/home/leopoldguyot/dev/QFeaturesPoster2026"]
 trust_level = "trusted"
 
 [tui]

@@ -9,11 +9,73 @@ return {
     config = function()
         local httpgd_port = tonumber(vim.env.R_HTTPGD_PORT) or 7878
 
-        local function start_httpgd_on_ssh()
-            if not vim.env.SSH_CONNECTION or vim.env.SSH_CONNECTION == "" then
+        local function r_string(value)
+            return vim.fn.json_encode(value)
+        end
+
+        local function send_r_command(command)
+            require('r.send').cmd(command)
+        end
+
+        local function package_root()
+            local file = vim.api.nvim_buf_get_name(0)
+            return vim.fs.root(file ~= "" and file or vim.fn.getcwd(), "DESCRIPTION") or vim.fn.getcwd()
+        end
+
+        local function with_styler(expr)
+            return string.format([=[
+if (requireNamespace("styler", quietly = TRUE) && requireNamespace("biocthis", quietly = TRUE)) {
+  %s
+} else {
+  cat("\nInstall required packages with: install.packages(c('styler', 'biocthis'))\n\n")
+}
+]=], expr)
+        end
+
+        local function with_devtools(expr)
+            return string.format([=[
+if (requireNamespace("devtools", quietly = TRUE)) {
+  %s
+} else {
+  cat("\nInstall devtools with: install.packages('devtools')\n\n")
+}
+]=], expr)
+        end
+
+        local function style_file()
+            local file = vim.fn.expand("%:p")
+            if file == "" then
+                vim.notify("No current file to style", vim.log.levels.WARN, { title = "R.nvim" })
                 return
             end
+            if vim.bo.modified then
+                vim.cmd.write()
+            end
+            send_r_command(with_styler(string.format(
+                "styler::style_file(%s, transformers = biocthis::bioc_style(indent_by = 4L))",
+                r_string(file)
+            )))
+        end
 
+        local function style_dir()
+            send_r_command(with_styler(string.format(
+                "styler::style_dir(%s, recursive = TRUE, transformers = biocthis::bioc_style(indent_by = 4L))",
+                r_string(vim.fn.getcwd())
+            )))
+        end
+
+        local function style_pkg()
+            send_r_command(with_styler(string.format(
+                "styler::style_pkg(%s, transformers = biocthis::bioc_style(indent_by = 4L))",
+                r_string(package_root())
+            )))
+        end
+
+        local function devtools_cmd(expr)
+            send_r_command(with_devtools(expr))
+        end
+
+        local function start_httpgd()
             local function copy_to_system_clipboard(text)
                 local ok = pcall(vim.fn.setreg, '+', text)
                 if ok then
@@ -42,11 +104,19 @@ return {
                 vim.notify("Could not copy httpgd URL to system clipboard", vim.log.levels.WARN, { title = "R.nvim" })
             end
 
+            if vim.env.SSH_CONNECTION and vim.env.SSH_CONNECTION ~= "" then
+                vim.notify(
+                    string.format("Open a tunnel first: ssh -L %d:127.0.0.1:%d <host>", httpgd_port, httpgd_port),
+                    vim.log.levels.INFO,
+                    { title = "R.nvim httpgd" }
+                )
+            end
+
             require('r.send').cmd(string.format([=[
 if (requireNamespace("httpgd", quietly = TRUE)) {
   devs <- grDevices::dev.list()
   if (is.null(devs) || !any(names(devs) == "httpgd")) {
-    httpgd::hgd(host = "127.0.0.1", port = %d, token = TRUE, silent = TRUE)
+    httpgd::hgd(host = "127.0.0.1", port = %d, token = FALSE, silent = TRUE)
   }
   url <- httpgd::hgd_url(host = "127.0.0.1", port = %d)
   cat("\nhttpgd URL: ", url, "\n\n", sep = "")
@@ -59,9 +129,6 @@ if (requireNamespace("httpgd", quietly = TRUE)) {
         require('r').setup({
             auto_quit = true,
             register_treesitter = false,
-            hook = {
-                after_R_start = start_httpgd_on_ssh,
-            },
         })
 
         -- Manual keymaps for common R operators and code block
@@ -89,6 +156,34 @@ if (requireNamespace("httpgd", quietly = TRUE)) {
                 -- R code block keymap using LocalLeader (backslash by default)
                 -- Note: R.nvim already has <M-r> (Alt+r) in insert mode for this
                 vim.keymap.set('n', '<LocalLeader>kc', insert_r_chunk, { buffer = true, desc = "Insert R code block" })
+                vim.keymap.set('n', '<LocalLeader>hg', start_httpgd, { buffer = true, desc = "Start httpgd" })
+                vim.keymap.set('n', '<LocalLeader>sf', style_file, { buffer = true, desc = "Style current file" })
+                vim.keymap.set('n', '<LocalLeader>sd', style_dir, { buffer = true, desc = "Style current directory" })
+                vim.keymap.set('n', '<LocalLeader>sp', style_pkg, { buffer = true, desc = "Style package" })
+                vim.keymap.set('n', '<LocalLeader>pl', function()
+                    devtools_cmd(string.format("devtools::load_all(path = %s)", r_string(package_root())))
+                end, { buffer = true, desc = "Load package" })
+                vim.keymap.set('n', '<LocalLeader>pi', function()
+                    devtools_cmd(string.format("devtools::install(pkg = %s, upgrade = 'never')", r_string(package_root())))
+                end, { buffer = true, desc = "Install package" })
+                vim.keymap.set('n', '<LocalLeader>pI', function()
+                    devtools_cmd(string.format(
+                        "devtools::install_deps(pkg = %s, dependencies = TRUE, upgrade = 'never')",
+                        r_string(package_root())
+                    ))
+                end, { buffer = true, desc = "Install package dependencies" })
+                vim.keymap.set('n', '<LocalLeader>pt', function()
+                    devtools_cmd(string.format("devtools::test(pkg = %s)", r_string(package_root())))
+                end, { buffer = true, desc = "Test package" })
+                vim.keymap.set('n', '<LocalLeader>pc', function()
+                    devtools_cmd(string.format("devtools::check(pkg = %s)", r_string(package_root())))
+                end, { buffer = true, desc = "Check package" })
+                vim.keymap.set('n', '<LocalLeader>pd', function()
+                    devtools_cmd(string.format("devtools::document(pkg = %s)", r_string(package_root())))
+                end, { buffer = true, desc = "Document package" })
+                vim.keymap.set('n', '<LocalLeader>pb', function()
+                    devtools_cmd(string.format("devtools::build(pkg = %s)", r_string(package_root())))
+                end, { buffer = true, desc = "Build package" })
 
                 if vim.bo.filetype == "rmd" or vim.bo.filetype == "quarto" then
                     vim.keymap.set({ 'n', 'i' }, '<M-c>', insert_r_chunk, { buffer = true, desc = "Insert Rmd chunk" })

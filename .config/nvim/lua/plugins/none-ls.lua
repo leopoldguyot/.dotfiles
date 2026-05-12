@@ -3,12 +3,14 @@ return {
 	config = function()
 		local null_ls = require("null-ls")
 		local formatting = null_ls.builtins.formatting
+		local sources = {}
 
 		-- Change this transformer expression if you want a different R formatter profile.
 		local r_transformers = "biocthis::bioc_style(indent_by = 4)"
 		local r_styler = formatting.styler.with({
 			extra_filetypes = { "quarto" },
 			args = function(params)
+				local ext = params.ft == "quarto" and "qmd" or params.ft
 				local default_args = {
 					"--slave",
 					"--no-restore",
@@ -37,18 +39,20 @@ writeLines(readLines(con), temp)
 styler::style_file(temp, transformers = %s)
 cat(paste0(readLines(temp), collapse = '\n'))
 close(con)]],
-						params.ft,
+						ext,
 						r_transformers
 					),
 				})
 			end,
 		})
 
+		if vim.fn.executable("stylua") == 1 then
+			table.insert(sources, formatting.stylua)
+		end
+		table.insert(sources, r_styler)
+
 		null_ls.setup({
-			sources = {
-				formatting.stylua,
-				r_styler,
-			},
+			sources = sources,
 		})
 
 		vim.keymap.set("n", "<leader>gf", function()

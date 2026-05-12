@@ -32,6 +32,17 @@ Local leader is `\` (default).
 | Insert (R/Rmd/Quarto) | `<C-S-m>` / `<M-p>` | Insert `|>` |
 | Insert (R/Rmd/Quarto) | `<M-->` | Insert `<-` |
 | Normal (R/Rmd/Quarto) | `<LocalLeader>kc` | Insert fenced R chunk |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>hg` | Start `httpgd` graphics device |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>sf` | Style current file with `styler` / `biocthis` |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>sd` | Style current working directory |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>sp` | Style current package |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>pl` | Load package with `devtools::load_all()` |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>pi` | Install package with `devtools::install()` |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>pI` | Install package dependencies |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>pt` | Run package tests |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>pc` | Run package check |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>pd` | Document package |
+| Normal (R/Rmd/Quarto) | `<LocalLeader>pb` | Build package |
 | Normal / Insert (Rmd/Quarto) | `<M-c>` | Insert fenced R chunk |
 | Normal / Terminal | `<C-h/j/k/l>` | Move across Neovim splits and tmux/zellij panes |
 
@@ -41,3 +52,4 @@ Local leader is `\` (default).
 - `quarto` CLI must be installed for `<leader>qp` preview.
 - Formatting is manual via `<leader>gf` (format on save is disabled).
 - R mappings are only active in `r`, `rmd`, and `quarto` filetypes.
+- On SSH, run `ssh -L 7878:127.0.0.1:7878 <host>` before opening the copied `httpgd` URL.

@@ -188,6 +188,7 @@ htmlTable
 htmltools
 htmlwidgets
 httpuv
+httpgd
 httr
 httr2
 ica
