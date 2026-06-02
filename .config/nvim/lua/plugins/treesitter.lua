@@ -8,7 +8,7 @@ return {
 
       local config = require("nvim-treesitter.configs")
       config.setup({
-        ensure_installed = { "r", "latex", "markdown", "rnoweb", "yaml" },
+        ensure_installed = { "r", "latex", "markdown", "markdown_inline", "rnoweb", "yaml" },
         auto_install = false,
         sync_install = false,
         highlight = { enable = true },

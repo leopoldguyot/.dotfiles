@@ -19,6 +19,15 @@ trust_level = "trusted"
 [projects."/home/leopoldguyot/dev/QFeaturesPoster2026"]
 trust_level = "trusted"
 
+[projects."/home/leopoldguyot/dev/Presentation_MERIT"]
+trust_level = "trusted"
+
+[projects."/home/leopoldguyot/Documents/wsbim1393/Rapports"]
+trust_level = "trusted"
+
+[projects."/home/leopoldguyot/dev/BiocExecute"]
+trust_level = "trusted"
+
 [tui]
 theme = "monokai-extended-bright"
 

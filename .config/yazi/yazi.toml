@@ -14,11 +14,11 @@ open = [
 
 [open]
 prepend_rules = [
-	{ name = "*.json", use = "edit" },
+	{ url = "*.json", use = "edit" },
 
 	# Multiple openers for a single rule
-	{ name = "*.html", use = [ "open", "edit" ] },
+	{ url = "*.html", use = [ "open", "edit" ] },
 ]
 append_rules = [
-	{ name = "*", use = "my-fallback" },
+	{ url = "*", use = "open" },
 ]
