@@ -15,10 +15,21 @@ Local leader is `\` (default).
 | Normal | `<leader>fg` | Telescope live grep |
 | Normal | `<leader>fb` | Telescope buffers |
 | Normal | `<leader>fh` | Telescope help tags |
+| Normal | `]c` / `[c` | Go to next / previous Git hunk |
+| Normal | `<leader>hs` | Stage current Git hunk |
+| Visual | `<leader>hs` | Stage selected Git lines |
+| Normal | `<leader>hr` | Reset current Git hunk |
+| Visual | `<leader>hr` | Reset selected Git lines |
+| Normal | `<leader>hp` | Preview current Git hunk |
+| Normal | `<leader>hb` | Show blame for current line |
 | Normal | `K` | LSP hover |
 | Normal | `<leader>gd` | Go to definition |
 | Normal | `<leader>gr` | Find references |
 | Normal | `<leader>ca` | Code actions |
+| Normal | `<leader>xx` | Toggle workspace diagnostics list |
+| Normal | `<leader>xX` | Toggle current buffer diagnostics list |
+| Normal | `<leader>cs` | Toggle document symbols list |
+| Normal | `<leader>cl` | Toggle LSP definitions and references list |
 | Normal | `<leader>gf` | Format current buffer |
 | Normal | `<leader>qp` | Open Quarto preview |
 | Normal | `<leader>dh` | Hide diagnostics |
@@ -50,6 +61,15 @@ Local leader is `\` (default).
 
 - `lazygit` binary must be installed for `<leader>gg`.
 - `quarto` CLI must be installed for `<leader>qp` preview.
+- Telescope uses the native FZF sorter built with `make`.
+- Whisk animates standard cursor motions and viewport scrolling. Use `:WhiskToggle` to toggle animations.
+- UI icons require a patched Nerd Font version 3.3 or later in the terminal.
+- Fidget shows LSP progress and notification popups. Use `:Fidget history` to review notifications.
+- Indent guides and scope highlighting are provided by `indent-blankline.nvim`.
+- Markdown and Quarto buffers use rendered headings, code blocks, tables, and lists. Use `:RenderMarkdown toggle` to toggle rendering.
+- `latex2text` from the `pylatexenc` pipx package renders LaTeX formulas in Markdown and Quarto buffers.
 - Formatting is manual via `<leader>gf` (format on save is disabled).
 - R mappings are only active in `r`, `rmd`, and `quarto` filetypes.
+- The `httpgd` R package must be installed for `<LocalLeader>hg`.
+- `R.nvim` provides R completion; `r_language_server` remains enabled for its other LSP features.
 - On SSH, run `ssh -L 7878:127.0.0.1:7878 <host>` before opening the copied `httpgd` URL.

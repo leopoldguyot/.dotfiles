@@ -19,8 +19,16 @@ return {
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
             for _, server in ipairs({ "lua_ls", "r_language_server", "texlab" }) do
+                local server_capabilities = vim.deepcopy(capabilities)
+                if server == "r_language_server" then
+                    -- R.nvim provides environment-aware completion through its built-in LSP.
+                    server_capabilities.textDocument.completion = nil
+                end
                 vim.lsp.config(server, {
-                    capabilities = capabilities,
+                    capabilities = server_capabilities,
+                    on_attach = server == "r_language_server" and function(client)
+                        client.server_capabilities.completionProvider = nil
+                    end or nil,
                 })
                 vim.lsp.enable(server)
             end

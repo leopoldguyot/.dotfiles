@@ -28,6 +28,12 @@ trust_level = "trusted"
 [projects."/home/leopoldguyot/dev/BiocExecute"]
 trust_level = "trusted"
 
+[projects."/home/leopoldguyot/dev/rtui"]
+trust_level = "trusted"
+
+[projects."/home/leopoldguyot/dev/QFeatures"]
+trust_level = "trusted"
+
 [tui]
 theme = "monokai-extended-bright"
 

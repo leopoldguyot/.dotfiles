@@ -9,6 +9,12 @@ vim.g.mapleader = " "
 vim.wo.relativenumber = true
 vim.opt.nu = true
 vim.opt.colorcolumn = "80"
+vim.opt.termguicolors = true
+vim.opt.cursorline = true
+vim.opt.signcolumn = "yes"
+vim.opt.winborder = "rounded"
+vim.opt.splitright = true
+vim.opt.splitbelow = true
 
 local function hide_diagnostics()
     vim.diagnostic.config({  -- https://neovim.io/doc/user/diagnostic.html

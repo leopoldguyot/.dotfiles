@@ -4,13 +4,29 @@ return {
   },
   {
     "nvim-telescope/telescope.nvim",
-    tag = "0.1.5",
-    dependencies = { "nvim-lua/plenary.nvim" },
+    tag = "v0.2.2",
+    dependencies = {
+        "nvim-lua/plenary.nvim",
+        "jonarrien/telescope-cmdline.nvim",
+        {
+            "nvim-telescope/telescope-fzf-native.nvim",
+            build = "make",
+        },
+    },
     config = function()
-        require("telescope").setup({
+        local telescope = require("telescope")
+        telescope.setup({
             extensions = {
                 ["ui-select"] = {
                     require("telescope.themes").get_dropdown({}),
+                },
+                cmdline = {
+                    picker = {
+                        layout_config = {
+                            width = 0.8,
+                            height = 0.4,
+                        },
+                    },
                 },
             },
             defaults = {
@@ -37,8 +53,11 @@ return {
         end, {desc = "grep including hidden"})
         vim.keymap.set('n', '<leader>fb', builtin.buffers, {desc = "find buffers"})
         vim.keymap.set('n', '<leader>fh', builtin.help_tags, {desc = "find help"})
-        require("telescope").load_extension("ui-select")
+        vim.keymap.set("n", ":", "<cmd>Telescope cmdline<CR>", {desc = "telescope cmdline"})
+        vim.keymap.set("n", "<leader>:", ":", {desc = "native cmdline"})
+        telescope.load_extension("ui-select")
+        telescope.load_extension("cmdline")
+        telescope.load_extension("fzf")
     end,
   },
 }
-
