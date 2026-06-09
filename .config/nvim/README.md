@@ -70,6 +70,7 @@ Local leader is `\` (default).
 - `latex2text` from the `pylatexenc` pipx package renders LaTeX formulas in Markdown and Quarto buffers.
 - Formatting is manual via `<leader>gf` (format on save is disabled).
 - R mappings are only active in `r`, `rmd`, and `quarto` filetypes.
+- `R.nvim` uses `radian` as the interactive R console when the `radian` executable is available; install it with `pipx install radian`.
 - The `httpgd` R package must be installed for `<LocalLeader>hg`.
 - `R.nvim` provides R completion; `r_language_server` remains enabled for its other LSP features.
 - On SSH, run `ssh -L 7878:127.0.0.1:7878 <host>` before opening the copied `httpgd` URL.

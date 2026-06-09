@@ -8,6 +8,7 @@ return {
     -- version = "~0.1.0",
     config = function()
         local httpgd_port = tonumber(vim.env.R_HTTPGD_PORT) or 7878
+        local has_radian = vim.fn.executable("radian") == 1
 
         local function r_string(value)
             return vim.fn.json_encode(value)
@@ -128,6 +129,9 @@ if (requireNamespace("httpgd", quietly = TRUE)) {
 
         require('r').setup({
             auto_quit = true,
+            bracketed_paste = has_radian,
+            R_app = has_radian and "radian" or "R",
+            R_cmd = "R",
             register_treesitter = false,
         })
 

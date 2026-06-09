@@ -14,6 +14,7 @@ alias shutdown='sudo /sbin/shutdown'
 alias gits='git status'
 alias gitall='git add .'
 alias gitc='git commit'
+alias r='radian'
 
 # alias fedora:
 #alias install='sudo dnf install'
